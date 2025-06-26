@@ -1,0 +1,167 @@
+#workspace {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /*background: rgba(0, 179, 238, 0.1);*/
+}
+
+#workspace #right_panel {
+    position: absolute;
+    width: 0;
+    display: none;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background: #eeeeee;
+    z-index: 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "tnum" on, "lnum" on;
+    color: #131722;
+    font-family: -apple-system, BlinkMacSystemFont, Trebuchet MS, Roboto, Ubuntu, sans-serif;
+    font-size: 14px;
+}
+
+#workspace #right_panel .toolbar {
+    position: absolute;
+    top: 0;
+    height: 38px;
+    left: 0;
+    right: 0;
+    background: #fff;
+    z-index: 1;
+    display: flex;
+    gap: 4px;
+    align-items: stretch;
+    padding: 2px;
+    box-sizing: border-box;
+}
+
+#workspace #right_panel .toolbar .toolbar-btn {
+    text-align: center;
+    padding: 0 16px;
+    align-content: center;
+    cursor: pointer;
+}
+
+#workspace #right_panel .toolbar .toolbar-btn:hover {
+    background: #f0f3fa;
+}
+
+
+#workspace #right_panel .suspended-message,
+#workspace #right_panel .suspended-overlay {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+#workspace #right_panel.suspended .suspended-message,
+#workspace #right_panel.suspended .suspended-overlay {
+    opacity: 1;
+    pointer-events: all;
+}
+
+#workspace #right_panel .suspended-overlay {
+    top: 40px;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.5);
+    z-index: 9;
+}
+
+#workspace #right_panel .suspended-message {
+    top: 50%;
+    left: 50%;
+    background: #fff;
+    z-index: 10;
+    padding: 10px 16px;
+    transform: translate(-50%, -50%);
+}
+
+#workspace #right_panel .price-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    border: 0;
+    height: 1px;
+
+    z-index: 2;
+    background-image: linear-gradient(90deg, #00000066, #00000066 50%, transparent 50%, transparent 100%);
+    background-size: 11px 1px;
+    border: none;
+}
+
+#workspace #right_panel .book-price-line {
+    background: #61ab02;
+    position: absolute;
+    left: 0;
+    right: 0;
+    border: 0;
+    height: 1px;
+    z-index: 2;
+    border: none;
+}
+
+#workspace .books {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+#workspace .books .obook, #workspace .books .pbook {
+    position: absolute;
+    width: 300px;
+    display: none;
+}
+
+#workspace .books .obook {
+    left: 0;
+}
+
+#workspace .books .pbook {
+    right: 0;
+}
+
+
+#workspace.with-book #tv_chart_container {
+    right: 300px;
+}
+
+#workspace.with-book.o.p #tv_chart_container {
+    right: 600px;
+}
+
+#workspace.with-book #right_panel {
+    width: 300px;
+    display: block;
+}
+
+#workspace.with-book.o .books .obook {
+    display: block;
+}
+
+#workspace.with-book.p .books .pbook {
+    display: block;
+}
+
+#workspace.with-book.o.p #right_panel {
+        width: 600px;
+}
+
+#tv_chart_container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(73, 255, 0, 0.1);
+}
+
+
+
