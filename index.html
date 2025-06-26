@@ -95,19 +95,22 @@
             },
         
             getBars: async function(symbolInfo, resolution, periodParams, onHistoryCallback) {
-                const url = `/api/data?type=history&symbol=${symbolInfo.name}&timeframe=${resolution}`;
-                
-                try {
-                    const response = await fetch(url);
-                    if (response.ok) {
-                        const data = await response.json();
-                        onHistoryCallback(data.bars || []);
-                    } else {
-                        onHistoryCallback([], { noData: true });
-                    }
-                } catch (e) {
-                    onHistoryCallback([], { noData: true });
+              const url = `/api/data?type=history&symbol=${symbolInfo.name}&timeframe=${resolution}`;
+              
+              try {
+                const response = await fetch(url);
+                if (response.ok) {
+                  const data = await response.json();
+                  console.log('Data received:', data); // Log untuk debugging
+                  onHistoryCallback(data.bars || []);
+                } else {
+                  console.error('API error:', response.status);
+                  onHistoryCallback([], { noData: true });
                 }
+              } catch (e) {
+                console.error('Fetch error:', e);
+                onHistoryCallback([], { noData: true });
+              }
             },
         };
 
