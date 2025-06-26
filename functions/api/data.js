@@ -11,7 +11,8 @@ export async function onRequestGet(context) {
   }
 
   // Proxying request to Cloudflare Worker
-  const workerURL = `https://tradingview-tools.donnnfargooo8383.workers.dev/api/data?${url.searchParams.toString()}`;
+  // tradingview-tools.donnnfargooo8383.workers.dev
+  const workerURL = `https://tradingview-tools.tradingview-tools.donnnfargooo8383.workers.dev/api/data?${url.searchParams.toString()}`;
   const response = await fetch(workerURL);
   
   return new Response(response.body, {
@@ -19,3 +20,5 @@ export async function onRequestGet(context) {
     headers: response.headers
   });
 }
+
+
