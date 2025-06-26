@@ -373,7 +373,7 @@
                 // library_path: "https://charting-library.tradingview-widget.com/charting_library/",
                 // debug: true, // uncomment this line to see Library errors and warnings in the console
                 fullscreen: true,
-                symbol: getURLParameter('symbol') ?? 'EURUSD',
+                symbol: getURLParameter('symbol') ?? 'XAUUSD',
                 interval: '20',
                 // load_last_chart: true,
                 // user_id: 1, // IMPORTANT!
@@ -383,7 +383,7 @@
                 save_load_adapter: {
                     getAllCharts: function () {
                         console.log("getAllCharts");
-                        return Promise.resolve({id: "main_chart", name: "main_chart", resolution: "15M", symbol: "EURUSD"});
+                        return Promise.resolve({id: "main_chart", name: "main_chart", resolution: "15M", symbol: "XAUUSD"});
                     }
                 },
                 // ... (other config)
