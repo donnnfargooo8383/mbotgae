@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-    <title>Tools Ngancugdeh</title>
+    <title>Ngancugdeh Tools</title>
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
     <script type="text/javascript" src="./charting_library.standalone.js"></script>
     <script type="text/javascript" src="./bundle.js"></script>
@@ -279,7 +279,7 @@
                 }
 
                 function adjustHeatmap() {
-                    if (!map) return;
+                    if (!map || !widget.heatmap[symbol]) return;
                     
                     const series = chart.getSeries();
                     if (!series) return;
@@ -306,22 +306,8 @@
                     timeTo = visibleRange.to;
                     xRatio = paneWidth / (timeTo - timeFrom);
                     
-                    if (!widget.heatmap[symbol]) {
-                        fetch(`${BASE_URL}/data/heatmap/${symbol}.json`)
-                            .then(response => response.json())
-                            .then(data => {
-                                widget.heatmap[symbol] = data;
-                                adjustHeatmap();
-                            })
-                            .catch(error => {
-                                console.error('Gagal memuat data heatmap:', error);
-                            });
-                        return;
-                    }
-                    
-                    const heatmapData = widget.heatmap[symbol];
-                    
                     // Perhitungan posisi vertikal yang lebih akurat
+                    const heatmapData = widget.heatmap[symbol];
                     const priceDiff = heatmapData.price - priceFrom;
                     const topPosition = paneHeight - (priceDiff / (priceTo - priceFrom)) * paneHeight;
                     
