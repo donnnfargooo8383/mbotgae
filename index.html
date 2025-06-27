@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-    <title>XXXX Tools - </title>
+    <title>TradingView Tools - FXSSI</title>
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
     <script type="text/javascript" src="./charting_library.standalone.js"></script>
     <script type="text/javascript" src="./bundle.js"></script>
@@ -170,9 +170,6 @@
             }
 
             // ======== INDIKATOR CUSTOM ========
-            // [Semua definisi indikator custom dari index.html tetap dipertahankan di sini]
-            // ... (kode indikator custom tetap sama seperti di index.html) ...
-
             const __prorat_buy_sell__ = {
                 name: "ProfitRatio",
                 metainfo: {
@@ -1810,8 +1807,8 @@
                                 onHistoryCallback([], { noData: true });
                             }
                         },
-                        subscribeBars: () => {}, // Fungsi dummy
-                        unsubscribeBars: () => {} // Fungsi dummy
+                        subscribeBars: () => {}, // Dummy function
+                        unsubscribeBars: () => {} // Dummy function
                     },
                     locale: "en",
                     disabled_features: ["header_compare", "header_screenshot", "header_saveload"],
