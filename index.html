@@ -16,7 +16,8 @@
         const GITHUB_OWNER = "donnnfargooo8383";
         const GITHUB_REPO = "tradingview-tools";
         const GITHUB_BRANCH = "main";
-        const GITHUB_DATA_BASE = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/data`;
+        // const GITHUB_DATA_BASE = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/data`;
+        const GITHUB_DATA_BASE = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}`;
 
         window.user = {
             "host": "fxssi.com",
@@ -1649,11 +1650,17 @@
                     },
                     
                     getBars: async function (symbolInfo, resolution, periodParams, onHistoryCallback, onErrorCallback) {
-                        const url = `${GITHUB_DATA_BASE}/history/${symbolInfo.name}_${resolution}.json`;
+                        // const url = `${GITHUB_DATA_BASE}/history/${symbolInfo.name}_${resolution}.json`;
+                        const url = `${GITHUB_DATA_BASE}/data/history/${symbolInfo.name}_${resolution}.json`;
+                        console.log("Fetching URL:", url); // Log untuk debug
                         
                         try {
                             const response = await fetch(url);
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
                             const json = await response.json();
+                            console.log("Data received:", json); // Log respons
                             
                             // Proses data dan simpan di buffer
                             for (let bar of json.bars) {
