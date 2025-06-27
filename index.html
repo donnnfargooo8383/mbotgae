@@ -65,32 +65,30 @@
     </div>
     
     <script type="text/javascript">
-        // ======== FUNGSI UTAMA YANG DIPERBAIKI ========
-        function getURLParameter(name, url) {
-            if (!url) url = window.location.href;
-            name = name.replace(/[\[\]]/g, '\\$&');
-            const regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
-            const results = regex.exec(url);
-            if (!results) return null;
-            if (!results[2]) return '';
-            return decodeURIComponent(results[2].replace(/\+/g, ' '));
-        }
-
         (function () {
+            // Fungsi untuk mendapatkan parameter URL
+            function getURLParameter(name, url) {
+                if (!url) url = window.location.href;
+                name = name.replace(/[\[\]]/g, '\\$&');
+                const regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
+                const results = regex.exec(url);
+                if (!results) return null;
+                if (!results[2]) return '';
+                return decodeURIComponent(results[2].replace(/\+/g, ' '));
+            }
+
             // Konfigurasi GitHub
             const GITHUB_OWNER = "donnnfargooo8383";
             const GITHUB_REPO = "mbotgae";
             const GITHUB_BRANCH = "main";
-            
-            // URL dasar untuk data di GitHub
             const GITHUB_DATA_BASE_URL = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/data`;
-            
-            // Variabel untuk menyimpan data dari GitHub
+
+            // Variabel untuk menyimpan data
             window.githubData = {
                 history: {},
                 heatmap: {}
             };
-            
+
             // Menampilkan/menyembunyikan loading overlay
             function showLoading(show) {
                 const overlay = document.getElementById('loading-overlay');
@@ -109,14 +107,13 @@
                         throw new Error(`Gagal mengambil data: ${response.status}`);
                     }
                     
-                    // Handle JSON vs binary data
                     if (path.endsWith('.json')) {
                         return await response.json();
                     } else {
                         return await response.blob();
                     }
                 } catch (error) {
-                    console.error(`Error mengambil data dari GitHub: ${error.message}`);
+                    console.error(`Error mengambil data: ${error.message}`);
                     return null;
                 }
             }
@@ -125,7 +122,6 @@
             async function loadHistoryData(symbol, resolution) {
                 const cacheKey = `${symbol}_${resolution}`;
                 
-                // Gunakan data cache jika tersedia
                 if (window.githubData.history[cacheKey]) {
                     return window.githubData.history[cacheKey];
                 }
@@ -136,9 +132,6 @@
                 
                 if (data) {
                     window.githubData.history[cacheKey] = data;
-                    console.log(`Data history ${symbol} ${resolution}m berhasil dimuat`);
-                } else {
-                    console.error(`Data history ${symbol} ${resolution}m tidak ditemukan`);
                 }
                 
                 showLoading(false);
@@ -147,7 +140,6 @@
             
             // Fungsi untuk mengambil heatmap
             async function loadHeatmapData(symbol) {
-                // Gunakan data cache jika tersedia
                 if (window.githubData.heatmap[symbol]) {
                     return window.githubData.heatmap[symbol];
                 }
@@ -157,19 +149,18 @@
                 const blob = await fetchFromGitHub(path);
                 
                 if (blob) {
-                    // Konversi blob ke URL objek
                     const url = URL.createObjectURL(blob);
                     window.githubData.heatmap[symbol] = url;
-                    console.log(`Heatmap ${symbol} berhasil dimuat`);
-                } else {
-                    console.error(`Heatmap ${symbol} tidak ditemukan`);
                 }
                 
                 showLoading(false);
                 return window.githubData.heatmap[symbol];
             }
 
-            // ======== INDIKATOR CUSTOM ========
+            // ========== DEFINISI INDIKATOR CUSTOM ==========
+            // (Semua definisi indikator dari file asli disertakan di sini)
+            // ProfitRatio (BUY:SELL)
+            
             const __prorat_buy_sell__ = {
                 name: "ProfitRatio",
                 metainfo: {
@@ -1706,15 +1697,9 @@
                         },
                         searchSymbols: (userInput, exchange, symbolType, onResultReadyCallback) => {
                             let symbols;
-                            const crypto = [
-                                "BTCUSD"
-                            ];
-                            const forex = [
-                                "XAUUSD"
-                            ];
-                            const indexes = [
-                                "US30"
-                            ];
+                            const crypto = ["BTCUSD"];
+                            const forex = ["XAUUSD"];
+                            const indexes = ["US30"];
                             
                             if (symbolType === 'crypto') {
                                 symbols = crypto;
@@ -1807,8 +1792,8 @@
                                 onHistoryCallback([], { noData: true });
                             }
                         },
-                        subscribeBars: () => {}, // Dummy function
-                        unsubscribeBars: () => {} // Dummy function
+                        subscribeBars: () => {},
+                        unsubscribeBars: () => {}
                     },
                     locale: "en",
                     disabled_features: ["header_compare", "header_screenshot", "header_saveload"],
@@ -1833,12 +1818,10 @@
                         const heatmapUrl = await loadHeatmapData(symbol);
                         if (!heatmapUrl) return;
 
-                        // Hapus heatmap lama jika ada
                         const container = document.querySelector(".pane .chart-gui-wrapper");
                         const oldMap = container.querySelector("#slc");
                         if (oldMap) oldMap.remove();
 
-                        // Buat heatmap baru
                         map = document.createElement("img");
                         map.id = "slc";
                         map.style.cssText = `
@@ -1855,16 +1838,12 @@
                         container.appendChild(map);
                     }
 
-                    // Setup awal
                     setupHeatmap();
-
-                    // Update saat simbol berubah
                     chart.onSymbolChanged().subscribe(null, setupHeatmap);
                 }
 
                 // ======== INITIAL SETUP ========
                 widget.onChartReady(() => {
-                    console.log("Chart Ready");
                     initHeatMap();
                     
                     widget.activeChart().onSymbolChanged().subscribe(null, () => {
@@ -1877,13 +1856,11 @@
 
             // ======== START APPLICATION ========
             window.addEventListener('DOMContentLoaded', () => {
-                // Cek dukungan browser
                 if (typeof TradingView === 'undefined') {
                     alert('Error: Charting library not loaded!');
                     return;
                 }
                 
-                // Inisialisasi aplikasi
                 try {
                     initOnReady();
                 } catch (error) {
