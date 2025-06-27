@@ -1,7 +1,7 @@
 export async function onRequestGet(context) {
   const { request } = context;
   const url = new URL(request.url);
-  const workerURL = `https://tradingview-tools.donnnfargooo8383.workers.dev/api/data?${url.searchParams.toString()}`;
+  const workerURL = `https://mbotgae.donnnfargooo8383.workers.dev/api/data?${url.searchParams.toString()}`;
   
   try {
     const response = await fetch(workerURL);
