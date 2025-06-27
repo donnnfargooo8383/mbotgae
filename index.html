@@ -38,12 +38,20 @@
         }
 
         function initOnReady() {
+
             const widget = new TradingView.widget({
                 fullscreen: true,
                 symbol: getURLParameter('symbol') ?? 'XAUUSD',
                 interval: '20',
+                custom_css_url: "/tradingview-tools/tv.css?v=2",
                 container: "tv_chart_container",
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                save_load_adapter: {
+                    getAllCharts: function () {
+                        console.log("getAllCharts");
+                        return Promise.resolve({id: "main_chart", name: "main_chart", resolution: "15M", symbol: "XAUUSD"});
+                    }
+                },
                 datafeed: {
                     onReady: (callback) => {
                         callback({
@@ -215,16 +223,19 @@
                 },
                 locale: "en",
                 disabled_features: ["header_compare", "header_screenshot", "header_saveload"],
+                enabled_features: [],
                 custom_indicators_getter: function (_PineJS) {
                     window.PineJS = _PineJS;
                     return Promise.resolve([
                         __prorat_buy_sell__, __prorat_signal__, __prorat_delta__,
-                        __interest_orders__, __interest_orders_delta__,
-                        __activity_increase__, __activity_increase_delta__,
+                        __interest_orders__, __interest_orders_delta__, __interest_positions__, __interest_positions_delta__,
+                        __activity_increase__, __activity_increase_delta__, __activity_decrease__, __activity_decrease_delta__,
                         __ratios__, __derivatives__
                     ]);
                 }
             });
+
+            widget.heatmap = {};
 
             // ===== FUNGSI UNTUK HEATMAP (SLC) =====
             function initHeatMap() {
