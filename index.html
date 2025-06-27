@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-    <title>View Tools</title>
+    <title>TradingView Tools - FXSSI</title>
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
     <script type="text/javascript" src="./charting_library.standalone.js"></script>
     <script type="text/javascript" src="./bundle.js"></script>
@@ -25,6 +25,17 @@
         // ==== KONFIGURASI INDIKATOR (TETAP SAMA) ====
         // [Semua definisi indikator tetap sama seperti sebelumnya]
         // ... (__prorat_buy_sell__, __prorat_signal__, dll) ...
+
+        // ===== FUNGSI BANTUAN =====
+        function getURLParameter(name, url) {
+            if (!url) url = window.location.href;
+            name = name.replace(/[\[\]]/g, "\\$&");
+            const regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)");
+            const results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, " "));
+        }
 
         function initOnReady() {
             const widget = new TradingView.widget({
@@ -258,18 +269,7 @@
                 });
                 
                 initHeatMapImage();
-            }
-
-            // ===== FUNGSI BANTUAN =====
-            function getURLParameter(name, url) {
-                if (!url) url = window.location.href;
-                name = name.replace(/[\[\]]/g, "\\$&");
-                const regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)");
-                const results = regex.exec(url);
-                if (!results) return null;
-                if (!results[2]) return '';
-                return decodeURIComponent(results[2].replace(/\+/g, " "));
-            }
+            }            
 
             widget.onChartReady(function() {
                 console.log("Chart Ready");
