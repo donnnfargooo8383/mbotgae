@@ -1,153 +1,2172 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-    <title>Cugdeh TradingView Tools</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>TradingView Tools - Cugdeh</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
     <script type="text/javascript" src="./charting_library.standalone.js"></script>
-    <style>
-        body { margin: 0; }
-        #tv_chart_container { 
-            width: 100%;
-            height: 100vh;
-        }
-    </style>
+    <script type="text/javascript" src="./bundle.js"></script>
+    <link rel="stylesheet" href="./wrpskc.css?v=3">
 </head>
-<body>
-    <div id="tv_chart_container"></div>
-
-    <script>
-        // Konfigurasi GitHub
+<body style="margin:0;">
+<div id="tv_chart_container" style="width:100%; height:100vh;"></div>
+</body>
+<script type="text/javascript">
+    (function () {
+        // ======= KONFIGURASI GITHUB ========
         const GITHUB_OWNER = "donnnfargooo8383";
         const GITHUB_REPO = "mbotgae";
         const GITHUB_BRANCH = "main";
-        const GITHUB_BASE = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}`;
-        
-        // Inisialisasi TradingView
-        const widget = new TradingView.widget({
-            symbol: 'XAUUSD',
-            interval: '20',
-            container: "tv_chart_container",
-            datafeed: {
-                onReady: (callback) => {
-                    callback({
-                        supported_resolutions: ["15", "20", "30", "60", "240"],
-                        supports_marks: false,
-                        supports_time: true,
-                        exchanges: [{ value: 'Cugdeh', name: 'Cugdeh', desc: 'Cugdeh Data' }],
-                        symbols_types: [
-                            { name: 'crypto', value: 'crypto' },
-                            { name: 'forex', value: 'forex' }
-                        ]
-                    });
-                },
-                searchSymbols: (userInput, exchange, symbolType, callback) => {
-                    const symbols = {
-                        crypto: ["BTCUSD"],
-                        forex: ["XAUUSD"]
-                    };
-                    const results = symbols[symbolType]?.map(symbol => ({
-                        symbol,
-                        ticker: symbol,
-                        description: symbol,
-                        exchange: "Cugdeh",
-                        type: symbolType
-                    })) || [];
-                    callback(results);
-                },
-                resolveSymbol: (symbolName, onResolved) => {
-                    onResolved({
-                        name: symbolName,
-                        ticker: symbolName,
-                        description: symbolName,
-                        type: symbolName === "BTCUSD" ? "crypto" : "forex",
-                        session: "24x7",
-                        exchange: "Cugdeh",
-                        pricescale: 100,
-                        minmovement: 1,
-                        has_intraday: true,
-                        supported_resolutions: ["15", "20", "30", "60", "240"],
-                        data_status: "streaming"
-                    });
-                },
-                getBars: async (symbolInfo, resolution, params, onResult) => {
-                    const url = `${GITHUB_BASE}/data/history/${symbolInfo.name}_${resolution}.json`;
-                    try {
-                        const response = await fetch(url);
-                        const data = await response.json();
+        // const GITHUB_DATA_BASE = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/data`;
+        const GITHUB_DATA_BASE = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}`;
 
-                        console.debug(`[DEBUG] Data loaded:`, {
-                            symbol: symbolInfo.name,
-                            resolution,
-                            barsCount: data.bars?.length || 0
-                        });
-                        
-                        onResult(data.bars, { noData: !data.bars.length });
-                    } catch (error) {
-                        console.error("Error loading data:", error);
-                        onResult([], { noData: true });
+        window.user = {
+            "host": "fxssi.com",
+            "id": 30747,
+            "name": "Try it FREE",
+            "plan-pro": true,
+            "plan": "proplus",
+            "avatar": "/anonymous.png"
+        };
+        
+        // ======= STUDI KUSTOM UNTUK TRADINGVIEW ========
+        // [Semua definisi studi kustom tetap sama seperti aslinya]
+        // ... (semua definisi indikator __prorat_buy_sell__ hingga __derivatives__)
+
+        const __prorat_buy_sell__ = {
+            name: "ProfitRatio",
+            metainfo: {
+                "_metainfoVersion": 40,
+                "id": "profit-ratio-buy-sell@tv-basicstudies-1",
+                "scriptIdPart": "",
+                "name": "ProfitRatio (BUY:SELL)",
+                "description": "ProfitRatio (BUY:SELL)",
+                "shortDescription": "Profit Ratio (BUY:SELL)",
+                "format": {type: 'percent'},
+                "is_hidden_study": false,
+                "is_price_study": false,
+                "isCustomIndicator": true,
+                // linkedToSeries: true,
+                "plots": [
+                    {"id": "plot_buy", "type": "line"},
+                    {"id": "plot_sell", "type": "line"},
+                    {
+                        'id': 'plot_buy_colorer',
+                        'type': 'colorer',
+                        'target': 'plot_buy',
+                        'palette': 'paletteId1',
+                    },
+                    {
+                        'id': 'plot_sell_colorer',
+                        'type': 'colorer',
+                        'target': 'plot_sell',
+                        'palette': 'paletteId2',
+                    },
+                ],
+                palettes: {
+                    paletteId1: {
+                        colors: {
+                            0: {
+                                name: 'Above Signal',
+                            },
+                            1: {
+                                name: 'Below Signal',
+                            },
+                        },
+                    },
+                    paletteId2: {
+                        colors: {
+                            0: {
+                                name: 'Above Signal',
+                            },
+                            1: {
+                                name: 'Below Signal',
+                            },
+                        },
+                    },
+                },
+                bands: [
+                    {
+                        id: 'hline_75',
+                        name: '75%',
+                        zorder: -1.1,
+                    },
+                    {
+                        id: 'hline_25',
+                        name: '25%',
+                        zorder: -1.11,
+                    },
+                ],
+                "defaults": {
+                    palettes: {
+                        paletteId1: {
+                            colors: {
+                                0: {
+                                    color: '#01a7bc',
+                                    width: 3,
+                                    style: 0,
+                                },
+                                1: {
+                                    color: '#01a7bc',
+                                    width: 1,
+                                    style: 0,
+                                },
+                            },
+                        },
+                        paletteId2: {
+                            colors: {
+                                0: {
+                                    color: '#fd8606',
+                                    width: 3,
+                                    style: 0,
+                                },
+                                1: {
+                                    color: '#fd8606',
+                                    width: 1,
+                                    style: 0,
+                                },
+                            },
+                        },
+                    },
+
+                    "styles": {
+                        "plot_buy": {
+                            'title': "Buy",
+                            "linestyle": 0,
+                            "visible": true,
+                            "linewidth": 1,
+                            "plottype": 'line',
+                            "trackPrice": true,
+                            "transparency": 10,
+                            "color": "#01a7bc",
+                            "format": {type: 'percent'},
+                        },
+                        "plot_sell": {
+                            'title': "Sell",
+                            "linestyle": 0,
+                            "visible": true,
+                            "linewidth": 1,
+                            "plottype": 'line',
+                            "trackPrice": true,
+                            "transparency": 10,
+                            "color": "#fd8606",
+                            "format": {type: 'percent'},
+                        }
+                    },
+
+                    bands: [
+                        {
+                            color: '#787B86',
+                            linestyle: 2,
+                            linewidth: 1,
+                            visible: true,
+                            value: 75,
+                        },
+                        {
+                            color: '#787B86',
+                            linestyle: 2,
+                            linewidth: 1,
+                            visible: true,
+                            value: 25,
+                        }
+                    ],
+
+                    // Precision of the study's output values
+                    // (quantity of digits after the decimal separator).
+                    "precision": 2,
+
+                    "inputs": {}
+                },
+                "styles": {
+                    "plot_buy": {
+                        "title": "Buy",
+                    },
+                    "plot_sell": {
+                        "title": "Sell",
                     }
                 },
-                subscribeBars: () => {},
-                unsubscribeBars: () => {}
+                "inputs": {}
             },
-            library_path: "/charting_library/",
-            disabled_features: [
-                "header_saveload",
-                "header_screenshot",
-                "header_compare",
-                "timezone_menu",
-                "volume_force_overlay",
-                "edit_buttons_in_legend",
-                "context_menus",
-                "control_bar",
-                "save_chart_properties_to_local_storage",
-                "load_chart_properties_from_local_storage"
-            ],
-            enabled_features: [
-                "study_templates",
-                "dont_show_boolean_study_arguments",
-                "hide_last_na_study_output",
-                "use_localstorage_for_settings"
-            ],
-            // charts_storage_url: "https://saveload.tradingview.com",
-            // charts_storage_api_version: "1.1",
-            // client_id: "tradingview.com",
-            // user_id: "public_user",
-            fullscreen: true,
-            autosize: true,
-            studies_overrides: {},
-            // custom_css_url: "/mbotgae/tv.css",
-            locale: "en",
-            studies_overrides: {
-                "volume.volume.color.0": "#FF0000",
-                "volume.volume.color.1": "#00FF00"
-            }
-        });
+            "constructor": function () {
+                this.main = function (context, inputCallback) {
+                    let ret = [];
+                    if (window.ssiBuffers) {
+                        ret = [
+                            window.ssiBuffers?.['prb']?.[context.symbol.time] * 100 ?? NaN,
+                            window.ssiBuffers?.['prs']?.[context.symbol.time] * 100 ?? NaN
+                        ];
+                        ret.push(ret[0] >= 75 || ret[0] <= 25 ? 0 : 1,
+                            ret[1] <= 25 || ret[1] >= 75 ? 0 : 1);
+                    }
 
-        // Inisialisasi Heatmap
-        widget.onChartReady(() => {
-            const chart = widget.chart();
-            chart.createStudy('Moving Average', false, false, [10], null, { 'Plot.color': '#FF0000' });
-            
-            // Tambahkan heatmap
-            const heatmapImg = document.createElement('img');
-            heatmapImg.id = 'heatmap-overlay';
-            heatmapImg.style.position = 'absolute';
-            heatmapImg.style.zIndex = '10';
-            heatmapImg.style.pointerEvents = 'none';
-            heatmapImg.style.mixBlendMode = 'multiply';
-            document.querySelector('.chart-gui-wrapper').appendChild(heatmapImg);
-            
-            function updateHeatmap() {
-                const symbol = chart.getSymbol();
-                heatmapImg.src = `${GITHUB_BASE}/data/heatmap/${symbol}.svg?t=${Date.now()}`;
-                heatmapImg.style.width = '100%';
-                heatmapImg.style.height = '100%';
+                    return ret;
+                }
+            }
+        }
+
+        const __prorat_signal__ = {
+            name: "ProfitRatio",
+            metainfo: {
+                "_metainfoVersion": 40,
+                "id": "profit-ratio-signal@tv-basicstudies-1",
+                "scriptIdPart": "",
+                "name": "ProfitRatio (Signal)",
+                "description": "ProfitRatio (Signal)",
+                "shortDescription": "Profit Ratio (Signal)",
+                "is_hidden_study": false,
+                "is_price_study": false,
+                "isCustomIndicator": true,
+                "plots": [
+                    {"id": "plot_signal", "type": "line"},
+                    {"id": "plot_signal_avg", "type": "line"},
+                    // {
+                    //     'id': 'plot_signal_colorer',
+                    //     'type': 'colorer',
+                    //     'target': 'fill_0',
+                    //     'palette': 'paletteId1',
+                    // },
+                    // {
+                    //     'id': 'plot_signal_colorer2',
+                    //     'type': 'colorer',
+                    //     'target': 'plot_signal',
+                    //     'palette': 'paletteId2',
+                    // },
+                    {
+                        id: 'plot_diamantus',
+                        type: 'shapes'
+                    }
+                ],
+                palettes: {
+                    paletteId1: {
+                        valToIndex: {
+                            0: 0,
+                            1: 1,
+                        },
+                        colors: {
+                            0: {
+                                name: 'Below Signal',
+                            },
+                            1: {
+                                name: 'Above Signal',
+                            },
+                        },
+                    },
+                    paletteId2: {
+                        colors: {
+                            0: {
+                                name: 'Below Signal',
+                            },
+                            1: {
+                                name: 'Above Signal',
+                            },
+                        },
+                    },
+                },
+                // filledAreasStyle: {
+                //     fill_0: {
+                //         color: '#fd8606', // ignored because replaced by palette colours
+                //         transparency: 50,
+                //         visible: true,
+                //         palette: 'paletteId1',
+                //     },
+                // },
+                // filledAreas: [
+                //     {
+                //         id: 'fill_0',
+                //         objAId: 'plot_signal',
+                //         objBId: 'plot_signal_avg',
+                //         type: 'plot_plot',
+                //         title: 'Above Signal Fill',
+                //         fillToIntersection: true,
+                //         palette: 'paletteId1',
+                //     },
+                // ],
+                "defaults": {
+                    palettes: {
+                        paletteId1: {
+                            colors: {
+                                0: {
+                                    color: 'rgba(0,0,0,0)',
+                                },
+                                1: {
+                                    color: '#fd8606',
+                                    transparency: 50,
+                                },
+                            },
+                        },
+                        paletteId2: {
+                            colors: {
+                                0: {
+                                    color: '#858585',
+                                    style: 0,
+                                    width: 1,
+                                },
+                                1: {
+                                    color: '#fd8606',
+                                    style: 0,
+                                    width: 3,
+                                },
+                            },
+                        },
+                    },
+                    "styles": {
+                        "plot_signal": {
+                            'title': "Signal",
+                            "linestyle": 0,
+                            "visible": true,
+                            "linewidth": 1,
+                            "plottype": 'line',
+                            "trackPrice": true,
+                            "transparency": 10,
+                            "color": "#858585"
+                        },
+                        "plot_signal_avg": {
+                            'title': "Signal",
+                            "linestyle": 0,
+                            "visible": true,
+                            "linewidth": 1,
+                            "plottype": 'line',
+                            "trackPrice": false,
+                            "transparency": 10,
+                            "color": "#0d71cf"
+                        },
+                        "plot_diamantus": {
+                            isHidden: true,
+                            location: 'Absolute',
+                            title: 'Diamantus',
+                            color: '#fd8606',
+                            "transparency": 0,
+                            plottype: 'shape_circle',
+                        }
+                    },
+
+                    // Precision of the study's output values
+                    // (quantity of digits after the decimal separator).
+                    "precision": 2,
+
+                    "inputs": {}
+                },
+                "styles": {
+                    "plot_signal": {
+                        "title": "Signal",
+                    },
+                    "plot_signal_avg": {
+                        "title": "Signal",
+                    }
+                },
+                "inputs": {}
+            },
+            "constructor": function () {
+                this.main = function (context, inputCallback) {
+                    let ret = [];
+                    if (window.ssiBuffers) {
+                        ret = [
+                            window.ssiBuffers?.['ppr']?.[context.symbol.time] * 100 ?? NaN,
+                            window.ssiBuffers?.['pprs']?.[context.symbol.time] * 100 * 1.04 ?? NaN
+                        ];
+
+                        // ret.push(ret[0] > ret[1] ? 1 : 0);
+                        // ret.push(ret[2]);
+                        ret.push(ret[0] > ret[1] ? ret[0] : NaN);
+                    }
+
+                    return ret;
+                }
+            }
+        }
+
+        const __prorat_delta__ = {
+            name: "ProfitRatio (Delta)",
+            metainfo: {
+                "_metainfoVersion": 40,
+                "id": "profit-ratio-delta@tv-basicstudies-1",
+                "scriptIdPart": "",
+                "name": "ProfitRatio (Delta)",
+                "description": "ProfitRatio (Delta)",
+                "shortDescription": "Profit Ratio (Delta)",
+                "is_hidden_study": false,
+                "is_price_study": false,
+                "isCustomIndicator": true,
+                "format": {
+                    "type": 'percent',
+                    "precision": 1,
+                },
+                "plots": [
+                    {"id": "plot_delta", "type": "line", "plottype": "histogram"},
+                    {
+                        "id": "plot_colorer",
+                        "type": "colorer",
+                        "plottype": "colorer",
+                        'target': 'plot_delta',
+                        'palette': 'paletteId1'
+                    }
+                ],
+                "palettes": {
+                    paletteId1: {
+                        colors: {
+                            0: {
+                                name: 'Red',
+                            },
+                            1: {
+                                name: 'Green',
+                            },
+                        },
+                    },
+                },
+                "defaults": {
+                    "styles": {
+                        "plot_delta": {
+                            'title': "Delta",
+                            "linestyle": 1,
+                            "visible": true,
+                            "trackPrice": false,
+                            "plottype": 5
+                        },
+                    },
+
+                    palettes: {
+                        paletteId1: {
+                            colors: {
+                                0: {
+                                    color: '#ff0000',
+                                    width: 3,
+                                    style: 0,
+                                    transparency: 50,
+                                },
+                                1: {
+                                    color: '#4caf51',
+                                    width: 3,
+                                    style: 0,
+                                    transparency: 50,
+                                },
+                            },
+                        },
+                    },
+                    // Precision of the study's output values
+                    // (quantity of digits after the decimal separator).
+                    "precision": 2,
+
+                    "inputs": {}
+                },
+                "styles": {},
+                "inputs": {}
+            },
+            "constructor": function () {
+                this.main = function (context, inputCallback) {
+                    const ppr_delta = window.ssiBuffers?.['ppr_delta']?.[context.symbol.time] * 100 ?? NaN;
+                    const colorIndex = ppr_delta > 0 ? 1 : 0;
+                    return [ppr_delta, colorIndex];
+                }
+            }
+        }
+
+        const __interest_orders__ = {
+            name: "OpenInterest (Orders)",
+            metainfo: {
+                "_metainfoVersion": 40,
+                "id": "open-interest_orders@tv-basicstudies-1",
+                "scriptIdPart": "",
+                "name": "OpenInterest (Orders)",
+                "description": "OpenInterest (Orders)",
+                "shortDescription": "Open Interest (Orders)",
+                "is_hidden_study": false,
+                "is_price_study": false,
+                "isCustomIndicator": true,
+                "plots": [
+                    {"id": "plot_oio", "type": "line"},
+                ],
+                "defaults": {
+                    "styles": {
+                        "plot_oio": {
+                            'title': "Orders",
+                            "linestyle": 0,
+                            "visible": true,
+                            "linewidth": 2,
+                            "plottype": 'line',
+                            "trackPrice": false,
+                            "transparency": 10,
+                            "color": "#0382ea"
+                        },
+                    },
+                    "precision": 2,
+
+                    "inputs": {}
+                },
+                "styles": {
+                    "plot_oio": {
+                        "title": "OI Orders",
+                    },
+                },
+                "inputs": {}
+            },
+            "constructor": function () {
+                this.main = function (context, inputCallback) {
+                    return [
+                        window.ssiBuffers?.['oio']?.[context.symbol.time] - 0 ?? NaN,
+                    ];
+                }
+            }
+        }
+
+        const __interest_orders_delta__ = {
+            name: "OpenInterest (Orders,Delta)",
+            metainfo: {
+                "_metainfoVersion": 40,
+                "id": "open-interest-orders-delta@tv-basicstudies-1",
+                "scriptIdPart": "",
+                "name": "OpenInterest (Orders,Delta)",
+                "description": "OpenInterest (Orders,Delta)",
+                "shortDescription": "Open Interest (Orders,Delta)",
+                "is_hidden_study": false,
+                "is_price_study": false,
+                "isCustomIndicator": true,
+                "plots": [
+                    {"id": "plot_delta", "type": "line", "plottype": "histogram"},
+                    {
+                        "id": "plot_colorer",
+                        "type": "colorer",
+                        "plottype": "colorer",
+                        'target': 'plot_delta',
+                        'palette': 'paletteId1'
+                    }
+                ],
+                palettes: {
+                    paletteId1: {
+                        colors: {
+                            0: {
+                                name: 'Red',
+                            },
+                            1: {
+                                name: 'Green',
+                            },
+                        },
+                    },
+                },
+                "defaults": {
+                    "styles": {
+                        "plot_delta": {
+                            'title': "Delta",
+                            "linestyle": 1,
+                            "visible": true,
+                            "trackPrice": false,
+                            "transparency": 40,
+                            "plottype": 5
+                        },
+                    },
+                    palettes: {
+                        paletteId1: {
+                            colors: {
+                                0: {
+                                    color: '#ff0000',
+                                    width: 3,
+                                    style: 0,
+                                    transparency: 50,
+                                },
+                                1: {
+                                    color: '#4caf51',
+                                    width: 3,
+                                    style: 0,
+                                    transparency: 50,
+                                },
+                            },
+                        },
+                    },
+                    // Precision of the study's output values
+                    // (quantity of digits after the decimal separator).
+                    "precision": 2,
+
+                    "inputs": {}
+                },
+                "styles": {},
+                "inputs": {}
+            },
+            "constructor": function () {
+                this.main = function (context, inputCallback) {
+                    const oio_delta = window.ssiBuffers?.['oio_delta']?.[context.symbol.time] - 0 ?? NaN;
+                    const colorIndex = oio_delta > 0 ? 1 : 0;
+                    return [oio_delta, colorIndex];
+                }
+            }
+        }
+
+        const __interest_positions__ = {
+            name: "OpenInterest (Positions)",
+            metainfo: {
+                "_metainfoVersion": 40,
+                "id": "open-interest_positionss@tv-basicstudies-1",
+                "scriptIdPart": "",
+                "name": "OpenInterest (Positions)",
+                "description": "OpenInterest (Positions)",
+                "shortDescription": "Open Interest (Positions)",
+                "is_hidden_study": false,
+                "is_price_study": false,
+                "isCustomIndicator": true,
+                "plots": [
+                    {"id": "plot_oip", "type": "line"},
+                ],
+                "defaults": {
+                    "styles": {
+                        "plot_oip": {
+                            'title': "Positions",
+                            "linestyle": 0,
+                            "visible": true,
+                            "linewidth": 2,
+                            "plottype": 'line',
+                            "trackPrice": true,
+                            "transparency": 10,
+                            "color": "#0382ea"
+                        },
+                    },
+
+                    // Precision of the study's output values
+                    // (quantity of digits after the decimal separator).
+                    "precision": 2,
+
+                    "inputs": {}
+                },
+                "styles": {
+                    "plot_oip": {
+                        "title": "OI Positions",
+                    },
+                },
+                "inputs": {}
+            },
+            "constructor": function () {
+                this.main = function (context, inputCallback) {
+                    return [
+                        window.ssiBuffers?.['oip']?.[context.symbol.time] - 0 ?? NaN,
+                    ];
+                }
+            }
+        }
+
+        const __interest_positions_delta__ = {
+            name: "OpenInterest (Positions,Delta)",
+            metainfo: {
+                "_metainfoVersion": 40,
+                "id": "open-interest-positions-delta@tv-basicstudies-1",
+                "scriptIdPart": "",
+                "name": "OpenInterest (Positions,Delta)",
+                "description": "OpenInterest (Positions,Delta)",
+                "shortDescription": "Open Interest (Positions,Delta)",
+                "is_hidden_study": false,
+                "is_price_study": false,
+                "isCustomIndicator": true,
+                "plots": [
+                    {"id": "plot_delta", "type": "line", "plottype": "histogram"},
+                    {
+                        "id": "plot_colorer",
+                        "type": "colorer",
+                        "plottype": "colorer",
+                        'target': 'plot_delta',
+                        'palette': 'paletteId1'
+                    }
+                ],
+                palettes: {
+                    paletteId1: {
+                        colors: {
+                            0: {
+                                name: 'Red',
+                            },
+                            1: {
+                                name: 'Green',
+                            },
+                        },
+                    },
+                },
+                "defaults": {
+                    "styles": {
+                        "plot_delta": {
+                            'title': "Delta",
+                            "linestyle": 1,
+                            "visible": true,
+                            "trackPrice": false,
+                            "plottype": 5
+                        },
+                    },
+                    palettes: {
+                        paletteId1: {
+                            colors: {
+                                0: {
+                                    color: '#ff0000',
+                                    width: 3,
+                                    style: 0,
+                                    transparency: 50,
+                                },
+                                1: {
+                                    color: '#4caf51',
+                                    width: 3,
+                                    style: 0,
+                                    transparency: 50,
+                                },
+                            },
+                        },
+                    },
+                    // Precision of the study's output values
+                    // (quantity of digits after the decimal separator).
+                    "precision": 2,
+
+                    "inputs": {}
+                },
+                "styles": {},
+                "inputs": {}
+            },
+            "constructor": function () {
+                this.main = function (context, inputCallback) {
+                    const oip_delta = window.ssiBuffers?.['oip_delta']?.[context.symbol.time] - 0 ?? NaN;
+                    const colorIndex = oip_delta > 0 ? 1 : 0;
+                    return [oip_delta, colorIndex];
+                }
+            }
+        }
+
+        const __activity_increase__ = {
+            name: "TradingActivity (Increase)",
+            metainfo: {
+                "_metainfoVersion": 40,
+                "id": "trading-activityt-increase@tv-basicstudies-1",
+                "scriptIdPart": "",
+                "name": "TradingActivity (Increase)",
+                "description": "TradingActivity (Increase)",
+                "shortDescription": "Trading Activity (Increase)",
+                "is_hidden_study": false,
+                "is_price_study": false,
+                "isCustomIndicator": true,
+                "plots": [
+                    {"id": "plot_0", "type": "line"},
+                    {"id": "plot_1", "type": "line"},
+                    {"id": "plot_baseline", "type": "line"},
+                ],
+                "defaults": {
+                    "styles": {
+                        "plot_0": {
+                            'title': "+Buyers",
+                            "linestyle": 0,
+                            "visible": true,
+                            "linewidth": 1,
+                            "plottype": 0,
+                            "trackPrice": true,
+                            "transparency": 10,
+                            "color": "#01a7bc"
+                        },
+                        "plot_1": {
+                            'title': "+Sellers",
+                            "linestyle": 0,
+                            "visible": true,
+                            "linewidth": 1,
+                            "plottype": 0,
+                            "trackPrice": false,
+                            "transparency": 10,
+                            "color": "#fd8606"
+                        },
+                        "plot_baseline": {
+                            "linewidth": 0,
+                            "linestyle": 0,
+                            "visible": false,
+                            "transparency": 0,
+                            "isHidden": true,
+                            // display: 1,
+                            "color": '#ff0000', // color of the baseline
+                        },
+                    },
+
+                    // Precision of the study's output values
+                    // (quantity of digits after the decimal separator).
+                    "precision": 2,
+
+                    "inputs": {}
+                },
+                filledAreasStyle: {
+                    fill_0: {
+                        bottomColor: '#01a7bc', // ignored because replaced by palette colours
+                        topColor: '#01a7bc', // ignored because replaced by palette colours
+                        color: '#01a7bc', // ignored because replaced by palette colours
+                        // fillType: "gradient",
+                        bottomValue: 0,
+                        topValue: 50,
+                        transparency: 90,
+                        visible: true,
+                    },
+                    fill_1: {
+                        topColor: '#fd8606', // ignored because replaced by palette colours
+                        bottomColor: '#fd8606', // ignored because replaced by palette colours
+                        color: '#fd8606', // ignored because replaced by palette colours
+                        // fillType: "gradient",
+                        bottomValue: 0,
+                        topValue: 1,
+                        transparency: 90,
+                        visible: true,
+
+                    },
+                },
+                filledAreas: [
+                    {
+                        id: 'fill_0',
+                        objAId: 'plot_baseline',
+                        objBId: 'plot_0',
+                        type: 'plot_plot',
+                        title: 'Buyers Fill',
+                        fillToIntersection: true,
+                    },
+                    {
+                        id: 'fill_1',
+                        objAId: 'plot_baseline',
+                        objBId: 'plot_1',
+                        type: 'plot_plot',
+                        title: 'Sellers Fill',
+                        fillToIntersection: false,
+                    },
+                ],
+                "styles": {
+                    "plot_0": {
+                        "title": "+Buyers",
+                    },
+                    "plot_1": {
+                        "title": "+Sellers",
+                    },
+                    "plot_baseline": {
+                        "title": 'Baseline',
+                        "isHidden": true, // hides from options window
+                    },
+                },
+                "inputs": {}
+            },
+            "constructor": function () {
+                this.main = function (context, inputCallback) {
+                    return [
+                        window.ssiBuffers?.['incb']?.[context.symbol.time] - 0 ?? NaN,
+                        window.ssiBuffers?.['incs']?.[context.symbol.time] - 0 ?? NaN,
+                        0
+                    ];
+                }
+            }
+        }
+
+        const __activity_increase_delta__ = {
+            name: "TradingActivity (Increase,Delta)",
+            metainfo: {
+                "_metainfoVersion": 40,
+                "id": "trading-activityt-increase-delta@tv-basicstudies-1",
+                "scriptIdPart": "",
+                "name": "TradingActivity (Increase,Delta)",
+                "description": "TradingActivity (Increase,Delta)",
+                "shortDescription": "Trading Activity (Increase,Delta)",
+                "is_hidden_study": false,
+                "is_price_study": false,
+                "isCustomIndicator": true,
+                "plots": [
+                    {"id": "plot_delta", "type": "line", "plottype": "histogram"},
+                    {
+                        "id": "plot_colorer",
+                        "type": "colorer",
+                        "plottype": "colorer",
+                        'target': 'plot_delta',
+                        'palette': 'paletteId1'
+                    }
+                ],
+                palettes: {
+                    paletteId1: {
+                        colors: {
+                            0: {
+                                name: 'Red',
+                            },
+                            1: {
+                                name: 'Green',
+                            },
+                        },
+                    },
+                },
+                "defaults": {
+                    "styles": {
+                        "plot_delta": {
+                            'title': "Delta",
+                            "linestyle": 1,
+                            "visible": true,
+                            "trackPrice": false,
+                            "transparency": 50,
+                            "plottype": 5
+                        },
+                    },
+
+                    palettes: {
+                        paletteId1: {
+                            colors: {
+                                0: {
+                                    color: '#ff0000',
+                                    width: 3,
+                                    style: 0,
+                                    transparency: 50,
+                                },
+                                1: {
+                                    color: '#4caf51',
+                                    width: 3,
+                                    style: 0,
+                                    transparency: 50,
+                                },
+                            },
+                        },
+                    },
+                    // Precision of the study's output values
+                    // (quantity of digits after the decimal separator).
+                    "precision": 2,
+
+                    "inputs": {}
+                },
+                "styles": {},
+                "inputs": {}
+            },
+            "constructor": function () {
+                this.main = function (context, inputCallback) {
+                    const inc_delta = window.ssiBuffers?.['dinc']?.[context.symbol.time] - 0 ?? NaN;
+                    const colorIndex = inc_delta > 0 ? 1 : 0;
+                    return [inc_delta, colorIndex];
+                }
+            }
+        }
+
+        const __activity_decrease__ = {
+            name: "TradingActivity (Decrease)",
+            metainfo: {
+                "_metainfoVersion": 40,
+                "id": "trading-activityt-decrease@tv-basicstudies-1",
+                "scriptIdPart": "",
+                "name": "TradingActivity (Decrease)",
+                "description": "TradingActivity (Decrease)",
+                "shortDescription": "Trading Activity (Decrease)",
+                "is_hidden_study": false,
+                "is_price_study": false,
+                "isCustomIndicator": true,
+                "plots": [
+                    {"id": "plot_0", "type": "line"},
+                    {"id": "plot_1", "type": "line"},
+                    {"id": "plot_baseline", "type": "line"},
+                ],
+                "defaults": {
+                    "styles": {
+                        "plot_0": {
+                            'title': "-Buyers",
+                            "linestyle": 0,
+                            "visible": true,
+                            "linewidth": 1,
+                            "plottype": 0,
+                            "trackPrice": true,
+                            "transparency": 10,
+                            "color": "#01a7bc"
+                        },
+                        "plot_1": {
+                            'title': "-Sellers",
+                            "linestyle": 0,
+                            "visible": true,
+                            "linewidth": 1,
+                            "plottype": 0,
+                            "trackPrice": true,
+                            "transparency": 10,
+                            "color": "#fd8606"
+                        },
+                        "plot_baseline": {
+                            "linewidth": 0,
+                            "linestyle": 0,
+                            "visible": false,
+                            "transparency": 0,
+                            "isHidden": true,
+                            // display: 1,
+                            "color": '#ff0000', // color of the baseline
+                        },
+                    },
+
+                    // Precision of the study's output values
+                    // (quantity of digits after the decimal separator).
+                    "precision": 2,
+
+                    "inputs": {}
+                },
+                filledAreasStyle: {
+                    fill_0: {
+                        bottomColor: '#01a7bc', // ignored because replaced by palette colours
+                        topColor: '#01a7bc', // ignored because replaced by palette colours
+                        color: '#01a7bc', // ignored because replaced by palette colours
+                        // fillType: "gradient",
+                        bottomValue: 0,
+                        topValue: 1,
+                        transparency: 90,
+                        visible: true,
+                    },
+                    fill_1: {
+                        topColor: '#fd8606', // ignored because replaced by palette colours
+                        bottomColor: '#fd8606', // ignored because replaced by palette colours
+                        color: '#fd8606', // ignored because replaced by palette colours
+                        // fillType: "gradient",
+                        bottomValue: 0,
+                        topValue: 1,
+                        transparency: 90,
+                        visible: true,
+
+                    },
+                },
+                filledAreas: [
+                    {
+                        id: 'fill_0',
+                        objAId: 'plot_baseline',
+                        objBId: 'plot_0',
+                        type: 'plot_plot',
+                        title: 'Buyers Fill',
+                        fillToIntersection: true,
+                    },
+                    {
+                        id: 'fill_1',
+                        objAId: 'plot_baseline',
+                        objBId: 'plot_1',
+                        type: 'plot_plot',
+                        title: 'Sellers Fill',
+                        fillToIntersection: false,
+                    },
+                ],
+                "styles": {
+                    "plot_0": {
+                        "title": "-Buyers",
+                    },
+                    "plot_1": {
+                        "title": "-Sellers",
+                    },
+                    "plot_baseline": {
+                        "title": 'Baseline',
+                        "isHidden": true, // hides from options window
+                    },
+                },
+                "inputs": {}
+            },
+            "constructor": function () {
+                this.main = function (context, inputCallback) {
+                    return [
+                        window.ssiBuffers?.['decb']?.[context.symbol.time] - 0 ?? NaN,
+                        window.ssiBuffers?.['decs']?.[context.symbol.time] - 0 ?? NaN,
+                        0
+                    ];
+                }
+            }
+        }
+
+        const __activity_decrease_delta__ = {
+            name: "TradingActivity (Decrease,Delta)",
+            metainfo: {
+                "_metainfoVersion": 40,
+                "id": "trading-activityt-decrease-delta@tv-basicstudies-1",
+                "scriptIdPart": "",
+                "name": "TradingActivity (Decrease,Delta)",
+                "description": "TradingActivity (Decrease,Delta)",
+                "shortDescription": "Trading Activity (Decrease,Delta)",
+                "is_hidden_study": false,
+                "is_price_study": false,
+                "isCustomIndicator": true,
+                "plots": [
+                    {"id": "plot_delta", "type": "line", "plottype": "histogram"},
+                    {
+                        "id": "plot_colorer",
+                        "type": "colorer",
+                        "plottype": "colorer",
+                        'target': 'plot_delta',
+                        'palette': 'paletteId1'
+                    }
+                ],
+                palettes: {
+                    paletteId1: {
+                        colors: {
+                            0: {
+                                name: 'Red',
+                            },
+                            1: {
+                                name: 'Green',
+                            },
+                        },
+                    },
+                },
+                "defaults": {
+                    "styles": {
+                        "plot_delta": {
+                            'title': "Delta",
+                            "linestyle": 1,
+                            "visible": true,
+                            "trackPrice": false,
+                            "transparency": 50,
+                            "plottype": 5
+                        },
+                    },
+
+                    palettes: {
+                        paletteId1: {
+                            colors: {
+                                0: {
+                                    color: '#ff0000',
+                                    width: 3,
+                                    style: 0,
+                                    transparency: 50,
+                                },
+                                1: {
+                                    color: '#4caf51',
+                                    width: 3,
+                                    style: 0,
+                                    transparency: 50,
+                                },
+                            },
+                        },
+                    },
+                    // Precision of the study's output values
+                    // (quantity of digits after the decimal separator).
+                    "precision": 2,
+
+                    "inputs": {}
+                },
+                "styles": {},
+                "inputs": {}
+            },
+            "constructor": function () {
+                this.main = function (context, inputCallback) {
+                    const dec_delta = window.ssiBuffers?.['ddec']?.[context.symbol.time] - 0 ?? NaN;
+                    const colorIndex = dec_delta > 0 ? 1 : 0;
+                    return [dec_delta, colorIndex];
+                }
+            }
+        }
+
+        const __ratios__ = {
+            name: "Ratios",
+            metainfo: {
+                "_metainfoVersion": 40,
+                "id": "ratios@tv-basicstudies-1",
+                "scriptIdPart": "",
+                "name": "Ratios",
+                "description": "Ratios",
+                "shortDescription": "Ratios",
+                "is_hidden_study": false,
+                "is_price_study": false,
+                "isCustomIndicator": true,
+                "plots": [
+                    {"id": "plot_avg", "type": "line"},
+                    {"id": "plot_blue", "type": "line"},
+                    {"id": "plot_duka", "type": "line"},
+                    {"id": "plot_fibo", "type": "line"},
+                    {"id": "plot_oan", "type": "line"},
+                    {"id": "plot_inst", "type": "line"},
+                    {"id": "plot_myfx", "type": "line"},
+                    {"id": "plot_igg", "type": "line"},
+                    {"id": "plot_ssi", "type": "line"},
+                    {"id": "plot_xm", "type": "line"},
+                    {"id": "plot_amar", "type": "line"},
+                ],
+                "defaults": {
+                    "styles": {
+                        "plot_avg": {
+                            'title': "Average",
+                            "linestyle": 0,
+                            "visible": true,
+                            "linewidth": 1,
+                            "plottype": 'line',
+                            "trackPrice": false,
+                            "transparency": 10,
+                            "color": "#2f2d2e"
+                        },
+                        "plot_blue": {
+                            'title': "FXBlue",
+                            "linestyle": 0,
+                            "visible": true,
+                            "linewidth": 1,
+                            "plottype": 'line',
+                            "trackPrice": false,
+                            "transparency": 10,
+                            "color": "#cc0100"
+                        },
+                        "plot_duka": {
+                            'title': "DukasCopy",
+                            "linestyle": 0,
+                            "visible": false,
+                            "linewidth": 1,
+                            "plottype": 'line',
+                            "trackPrice": false,
+                            "transparency": 10,
+                            "color": "#ff4343"
+                        },
+                        "plot_fibo": {
+                            'title': "Fibo",
+                            "linestyle": 0,
+                            "visible": false,
+                            "linewidth": 1,
+                            "plottype": 'line',
+                            "trackPrice": false,
+                            "transparency": 10,
+                            "color": "#22E057"
+                        },
+                        "plot_oan": {
+                            'title': "Oan",
+                            "linestyle": 0,
+                            "visible": true,
+                            "linewidth": 1,
+                            "plottype": 'line',
+                            "trackPrice": false,
+                            "transparency": 10,
+                            "color": "#00aec8"
+                        },
+                        "plot_inst": {
+                            'title': "InstaForex",
+                            "linestyle": 0,
+                            "visible": false,
+                            "linewidth": 1,
+                            "plottype": 'line',
+                            "trackPrice": false,
+                            "transparency": 10,
+                            "color": "#bd43bc"
+                        },
+                        "plot_myfx": {
+                            'title': "MyFXBook",
+                            "linestyle": 0,
+                            "visible": true,
+                            "linewidth": 1,
+                            "plottype": 'line',
+                            "trackPrice": false,
+                            "transparency": 10,
+                            "color": "#ff8a00"
+                        },
+                        "plot_igg": {
+                            'title': "IGG",
+                            "linestyle": 0,
+                            "visible": false,
+                            "linewidth": 1,
+                            "plottype": 'line',
+                            "trackPrice": false,
+                            "transparency": 10,
+                            "color": "#0d71cf"
+                        },
+                        "plot_ssi": {
+                            'title': "FXSSI",
+                            "linestyle": 0,
+                            "visible": true,
+                            "linewidth": 1,
+                            "plottype": 'line',
+                            "trackPrice": false,
+                            "transparency": 10,
+                            "color": "#F25792"
+                        },
+                        "plot_xm": {
+                            'title': "XM",
+                            "linestyle": 0,
+                            "visible": true,
+                            "linewidth": 1,
+                            "plottype": 'line',
+                            "trackPrice": false,
+                            "transparency": 10,
+                            "color": "#5170aa"
+                        },
+                        "plot_amar": {
+                            'title': "AMarkets",
+                            "linestyle": 0,
+                            "visible": true,
+                            "linewidth": 1,
+                            "plottype": 'line',
+                            "trackPrice": false,
+                            "transparency": 10,
+                            "color": "#aaaa01"
+                        },
+                    },
+
+                    // Precision of the study's output values
+                    // (quantity of digits after the decimal separator).
+                    "precision": 2,
+
+                    "inputs": {}
+                },
+                "styles": {},
+                "inputs": {}
+            },
+            "constructor": function () {
+                this.main = function (context, inputCallback) {
+                    return [
+                        window.ssiBuffers?.['average']?.[context.symbol.time] - 0 ??NaN,
+                        window.ssiBuffers?.['fxblue']?.[context.symbol.time] - 0 ??NaN,
+                        window.ssiBuffers?.['dukscopy']?.[context.symbol.time] - 0 ??NaN,
+                        window.ssiBuffers?.['fiboforx']?.[context.symbol.time] - 0 ??NaN,
+                        window.ssiBuffers?.['ftroanda']?.[context.symbol.time] - 0 ??NaN,
+                        window.ssiBuffers?.['instfor']?.[context.symbol.time] - 0 ??NaN,
+                        window.ssiBuffers?.['myfxbook']?.[context.symbol.time] - 0 ??NaN,
+                        window.ssiBuffers?.['fxcm']?.[context.symbol.time] - 0 ??NaN,
+                        window.ssiBuffers?.['ssi']?.[context.symbol.time] - 0 ??NaN,
+                        window.ssiBuffers?.['xm']?.[context.symbol.time] - 0 ??NaN,
+                        window.ssiBuffers?.['amarkets']?.[context.symbol.time] - 0 ??NaN,
+                    ];
+                }
+            }
+        }
+
+        const __derivatives__ = {
+            name: "Ratios",
+            metainfo: {
+                "_metainfoVersion": 40,
+                "id": "derivatives@tv-basicstudies-1",
+                "scriptIdPart": "",
+                "name": "Derivatives",
+                "description": "Derivatives",
+                "shortDescription": "Derivatives",
+                "is_hidden_study": false,
+                "is_price_study": true,
+                "isCustomIndicator": true,
+                "plots": [
+                    {"id": "plot_mvo", "type": "line"},
+                    {"id": "plot_mvp", "type": "line"},
+                    {"id": "plot_ob", "type": "line"},
+                    {"id": "plot_os", "type": "line"},
+                    {"id": "plot_sr", "type": "line"},
+                    {"id": "plot_rp", "type": "line"},
+                    {"id": "plot_pra", "type": "line"},
+                    {"id": "plot_prb", "type": "line"}
+
+                ],
+                "defaults": {
+                    "styles": {
+                        "plot_mvo": {
+                            'title': "MVO",
+                            "linestyle": 0,
+                            "visible": false,
+                            "linewidth": 3,
+                            "plottype": 'line',
+                            "trackPrice": false,
+                            "transparency": 10,
+                            "color": "#8bca05"
+                        },
+                        "plot_mvp": {
+                            'title': "MVP",
+                            "linestyle": 0,
+                            "visible": true,
+                            "linewidth": 2,
+                            "plottype": 'line',
+                            "trackPrice": false,
+                            "transparency": 10,
+                            "color": "#288fe7"
+                        },
+                        "plot_ob": {
+                            'title': "Overbought",
+                            "linestyle": 0,
+                            "visible": false,
+                            "linewidth": 2,
+                            "plottype": 'line',
+                            "trackPrice": false,
+                            "transparency": 10,
+                            "color": "#2bc96e"
+                        },
+                        "plot_os": {
+                            'title': "Oversold",
+                            "linestyle": 0,
+                            "visible": false,
+                            "linewidth": 2,
+                            "plottype": 'line',
+                            "trackPrice": false,
+                            "transparency": 10,
+                            "color": "#e76056"
+                        },
+                        "plot_sr": {
+                            'title': "Support / Resistance",
+                            "linestyle": 0,
+                            "visible": false,
+                            "linewidth": 2,
+                            "plottype": 'line',
+                            "trackPrice": false,
+                            "transparency": 10,
+                            "color": "#f48311"
+                        },
+                        "plot_rp": {
+                            'title': "Return Point",
+                            "linestyle": 0,
+                            "visible": false,
+                            "linewidth": 2,
+                            "plottype": 'line',
+                            "trackPrice": false,
+                            "transparency": 10,
+                            "color": "#c766f9"
+                        },
+                        "plot_pra": {
+                            'title': "Potential Reversal Point Above",
+                            "linestyle": 0,
+                            "visible": false,
+                            "linewidth": 2,
+                            "plottype": 'line',
+                            "trackPrice": false,
+                            "transparency": 10,
+                            "color": "#c1b930"
+                        },
+                        "plot_prb": {
+                            'title': "Potential Reversal Point Below",
+                            "linestyle": 0,
+                            "visible": false,
+                            "linewidth": 2,
+                            "plottype": 'line',
+                            "trackPrice": false,
+                            "transparency": 10,
+                            "color": "#c1b930"
+                        },
+                    },
+
+                    // Precision of the study's output values
+                    // (quantity of digits after the decimal separator).
+                    "precision": 2,
+
+                    "inputs": {}
+                },
+                "styles": {
+                    "plot_mvo": {
+                        'title': "MVO",
+                        "linestyle": 0,
+                        "visible": true,
+                        "linewidth": 3,
+                        "plottype": 'line',
+                        "trackPrice": true,
+                        "transparency": 10,
+                        "color": "#8bca05"
+                    },
+                    "plot_mvp": {
+                        'title': "MVP",
+                        "linestyle": 0,
+                        "visible": true,
+                        "linewidth": 2,
+                        "plottype": 'line',
+                        "trackPrice": false,
+                        "transparency": 10,
+                        "color": "#288fe7"
+                    },
+                    "plot_ob": {
+                        'title': "Overbought",
+                        "linestyle": 0,
+                        "visible": true,
+                        "linewidth": 2,
+                        "plottype": 'line',
+                        "trackPrice": false,
+                        "transparency": 10,
+                        "color": "#2bc96e"
+                    },
+                    "plot_os": {
+                        'title': "Oversold",
+                        "linestyle": 0,
+                        "visible": true,
+                        "linewidth": 2,
+                        "plottype": 'line',
+                        "trackPrice": false,
+                        "transparency": 10,
+                        "color": "#e76056"
+                    },
+                    "plot_sr": {
+                        'title': "Support / Resistance",
+                        "linestyle": 0,
+                        "visible": true,
+                        "linewidth": 2,
+                        "plottype": 'line',
+                        "trackPrice": false,
+                        "transparency": 10,
+                        "color": "#f48311"
+                    },
+                    "plot_rp": {
+                        'title': "Return Point",
+                        "linestyle": 0,
+                        "visible": true,
+                        "linewidth": 2,
+                        "plottype": 'line',
+                        "trackPrice": false,
+                        "transparency": 10,
+                        "color": "#c766f9"
+                    },
+                    "plot_pra": {
+                        'title': "Potential Reversal Point Above",
+                        "linestyle": 0,
+                        "visible": true,
+                        "linewidth": 2,
+                        "plottype": 'line',
+                        "trackPrice": false,
+                        "transparency": 10,
+                        "color": "#c1b930"
+                    },
+                    "plot_prb": {
+                        'title': "Potential Reversal Point Below",
+                        "linestyle": 0,
+                        "visible": true,
+                        "linewidth": 2,
+                        "plottype": 'line',
+                        "trackPrice": false,
+                        "transparency": 10,
+                        "color": "#c1b930"
+                    },
+                },
+
+                "inputs": {}
+            },
+            "constructor": function () {
+                this.main = function (context, inputCallback) {
+                    this._context = context;
+                    this._input = inputCallback;
+
+                    // console.log(context);
+                    return [
+                        window.ssiBuffers?.['mvo']?.[context.symbol.time] - 0,
+                        window.ssiBuffers?.['mvp']?.[context.symbol.time] - 0,
+                        window.ssiBuffers?.['ob']?.[context.symbol.time] - 0,
+                        window.ssiBuffers?.['os']?.[context.symbol.time] - 0,
+                        window.ssiBuffers?.['sr']?.[context.symbol.time] - 0,
+                        window.ssiBuffers?.['gr']?.[context.symbol.time] - 0,
+                        window.ssiBuffers?.['prpa']?.[context.symbol.time] - 0,
+                        window.ssiBuffers?.['prpb']?.[context.symbol.time] - 0,
+                    ];
+                }
+            }
+        }
+
+        function initOnReady() {
+            widget.heatmap = {};
+            // ======= FUNGSI UTILITAS ========
+            function getURLParameter(name, url) {
+                if (!url) url = location.href;
+                name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+                var regexS = "[\\?&]" + name + "=([^&#]*)";
+                var regex = new RegExp(regexS);
+                var results = regex.exec(url);
+                return results == null ? undefined : results[1];
             }
             
-            chart.onSymbolChanged().subscribe(null, updateHeatmap);
-            updateHeatmap();
-        });
-    </script>
-</body>
+            widget.onChartReady(function () {
+                // widget.activeChart().createStudy('ProfitRatio', false, false, [true], null, {});
+                // widget.activeChart().createStudy('MVP', true, false, [true], null, {});
+                // widget.addCustomCSSFile("/tv/tv.css");
+                // widget.applyOverrides({"barStyle.downColor": "#fd8606"});
+                console.log("Chart Ready");
+                initHeatMap();
+                // widget.activeChart().crossHairMoved().subscribe(
+                //     null,
+                //     ({ time, price }) => console.log(time, price)
+                // );
+                widget.activeChart().onDataLoaded().subscribe(
+                    null,
+                    (e) => {
+                        // console.log('New history bars are loaded', e)
+                    },
+                    false
+                );
+
+                widget.activeChart().onSymbolChanged().subscribe(
+                    null,
+                    () => {
+                        setURLParameter('symbol', widget.activeChart().symbol());
+                    }
+                );
+
+                // function createOrClose(study_id) {
+                //     widget.activeChart().getStudyById(study_id)
+                // }
+
+                widget.createDropdown(
+                    {
+                        title: 'FXSSI Indicators',
+                        icon: '<svg ' +
+                            ' xmlns="http://www.w3.org/2000/svg" width="32" height="32"  viewBox="200 300 140 220"' +
+                            ' enable-background="new 200 200 500 500" xml:space="preserve">' +
+                            '<polygon fill="#F29142" points="294.4,343.2 294.4,376.42 268.25,388.57 232.49,405.18 232.49,371.96 268.25,355.35 "/>' +
+                            '<polygon fill="#D57629" points="232.487,371.96 232.487,405.176 268.249,388.568 "/>' +
+                            '<polygon fill="#3A455A" points="304.01,405.18 304.01,438.39 268.25,421.78 232.49,405.18 268.25,388.57 "/>' +
+                            '<polygon fill="#3A455A" points="304.01,405.18 268.25,421.78 232.49,405.18 268.25,388.57 "/>' +
+                            '<polygon fill="#F29142" points="294.4,343.2 294.4,376.42 268.25,388.57 232.49,371.96 268.25,355.35 "/>' +
+                            '<polygon fill="#505ECA" points="304.01,405.176 268.254,421.782 268.25,421.78 232.49,438.39 232.49,471.61 304.007,438.391 ' +
+                            '304.01,438.393 "/>' +
+                            '<polygon fill="#8B96FB" points="304.01,438.39 232.49,471.61 232.49,438.39 268.25,421.78 "/>' +
+                            '<polygon fill="#505ECA" points="304.01,438.393 304.01,405.176 268.249,421.785 "/>' +
+                            '</svg>',
+                        // tooltip: 'FXSSI Tools',
+                        items: [
+                            {
+                                title: 'ProfitRatio (BUY:SELL)',
+                                onSelect: (e) => {
+                                    // profit-ratio-buy-sell@tv-basicstudies-1
+                                    widget.activeChart().createStudy('ProfitRatio (BUY:SELL)', false, false, [true], null, {});
+                                    // widget.activeChart().getAllStudies().forEach(({name}) => console.log(name));
+                                },
+                            },
+                            {
+                                title: 'ProfitRatio (Signal)',
+                                onSelect: (e) => {
+                                    widget.activeChart().createStudy('ProfitRatio (Signal)', false, false, [true], null, {});
+                                    // widget.activeChart().getAllStudies().forEach(({name}) => console.log(name));
+                                },
+                            },
+                            {
+                                title: 'ProfitRatio (Delta)',
+                                onSelect: (e) => {
+                                    widget.activeChart().createStudy('ProfitRatio (Delta)', false, false, [true], null, {});
+                                    // widget.activeChart().getAllStudies().forEach(({name}) => console.log(name));
+                                },
+                            },
+                            {
+                                title: 'Open Interest (Orders)',
+                                onSelect: () => {
+                                    widget.activeChart().createStudy('OpenInterest (Orders)', false, false, [true], null, {});
+                                    widget.activeChart().createStudy('OpenInterest (Orders,Delta)', false, false, [true], null, {}).then(id => {
+                                        widget.activeChart().getStudyById(id).mergeUp();
+                                    });
+                                },
+                            },
+                            // {
+                            //     title: 'Open Interest (Orders, Delta)',
+                            //     onSelect: () => {
+                            //         widget.activeChart().createStudy('OpenInterest (Orders,Delta)', false, false, [true], null, {});
+                            //     },
+                            // },
+                            {
+                                title: 'Open Interest (Positions)',
+                                onSelect: () => {
+                                    widget.activeChart().createStudy('OpenInterest (Positions)', false, false, [true], null, {});
+                                    widget.activeChart().createStudy('OpenInterest (Positions,Delta)', false, false, [true], null, {}).then(id => {
+                                        widget.activeChart().getStudyById(id).mergeUp();
+                                    });
+                                },
+                            },
+                            // {
+                            //     title: 'Open Interest (Positions, Delta)',
+                            //     onSelect: () => {
+                            //         widget.activeChart().createStudy('OpenInterest (Positions,Delta)', false, false, [true], null, {});
+                            //     },
+                            // },
+                            {
+                                title: 'Trading Activity (Increase)',
+                                onSelect: () => {
+                                    widget.activeChart().createStudy('TradingActivity (Increase)', false, false, [true], null, {});
+                                    widget.activeChart().createStudy('TradingActivity (Increase,Delta)', false, false, [true], null, {}).then(id => {
+                                        widget.activeChart().getStudyById(id).mergeUp();
+                                    });
+                                },
+                            },
+                            // {
+                            //     title: 'Trading Activity (Increase,Delta)',
+                            //     onSelect: () => {
+                            //         widget.activeChart().createStudy('TradingActivity (Increase,Delta)', false, false, [true], null, {});
+                            //     },
+                            // },
+                            {
+                                title: 'Trading Activity (Decrease)',
+                                onSelect: () => {
+                                    widget.activeChart().createStudy('TradingActivity (Decrease)', false, false, [true], null, {});
+                                    widget.activeChart().createStudy('TradingActivity (Decrease,Delta)', false, false, [true], null, {}).then(id => {
+                                        widget.activeChart().getStudyById(id).mergeUp();
+                                    });
+                                },
+                            },
+                            // {
+                            //     title: 'Trading Activity (Decrease,Delta)',
+                            //     onSelect: () => {
+                            //         widget.activeChart().createStudy('TradingActivity (Decrease,Delta)', false, false, [true], null, {});
+                            //     },
+                            // },
+                            {
+                                title: 'Ratios',
+                                onSelect: () => {
+                                    widget.activeChart().createStudy('Ratios', false, false, [true], null, {});
+                                },
+                            },
+                            {
+                                title: 'Derivatives',
+                                onSelect: () => {
+                                    widget.activeChart().createStudy('Derivatives', false, false, [true], null, {});
+                                },
+                            }
+                        ]
+                    }
+                ).then(myDropdownApi => {
+                    // Use myDropdownApi if you need to update the dropdown:
+                    // myDropdownApi.applyOptions({
+                    //     title: 'a new title!'
+                    // });
+
+                    // Or remove the dropdown:
+                    // myDropdownApi.remove();
+                });
+            });
+
+            // ======= DATA FEED YANG DIMODIFIKASI ========
+            const widget = new TradingView.widget({
+                fullscreen: true,
+                symbol: getURLParameter('symbol') ?? 'XAUUSD',
+                interval: '20',
+                container: "tv_chart_container",
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                datafeed: {
+                    onReady: (callback) => {
+                        callback({
+                            supported_resolutions: ["15", "20", "30", "60", "240"],
+                            supports_marks: true,
+                            supports_search: true,
+                            supports_time: true,
+                            exchanges: [
+                                {value: 'FXSSI', name: 'FXSSI', desc: 'FXSSI.com'},
+                            ],
+                            symbols_types: [
+                                {name: 'crypto', value: 'crypto'},
+                                {name: 'forex', value: 'forex'},
+                                {name: 'index', value: 'index'},
+                            ]
+                        });
+                    },
+                    searchSymbols: (userInput, exchange, symbolType, onResultReadyCallback) => {
+                        let symbols;
+                        const crypto = [
+                            "BTCUSD"
+                        ];
+                        const forex = [
+                            "XAUUSD"
+                        ];
+                        const indexes = [
+                            "US30"
+                        ];
+                        if (symbolType === 'crypto')
+                            symbols = crypto;
+                        else if (symbolType === 'forex')
+                            symbols = forex;
+                        else if (symbolType === 'index')
+                            symbols = indexes;
+                        else
+                            symbols = crypto.concat(forex);
+
+                        let ret = [];
+                        let found_symbols = [];
+                        for (let symbol of symbols) {
+                            if (['ETHUSD', 'BTCUSD'].indexOf(symbol) > -1) symbolType = 'crypto';
+                            if (['US30', 'NAS100'].indexOf(symbol) > -1) symbolType = 'index';
+                            if (symbol.toLowerCase().indexOf(userInput.toLowerCase()) < 0) continue;
+                            found_symbols.push(symbol);
+                        }
+                        symbols = found_symbols.concat(symbols);
+                        symbols = symbols.filter((value, index, array) => array.indexOf(value) === index);
+
+                        for (let symbol of symbols) {
+                            // type = "forex";
+                            ret.push({
+                                "symbol": symbol,
+                                "ticker": symbol,
+                                // "full_name": symbol,
+                                "description": symbol,
+                                "exchange": "FXSSI",
+                                "type": symbolType
+                            });
+                        }
+
+                        onResultReadyCallback(ret);
+                    },
+                    
+                    resolveSymbol: (symbolName, onSymbolResolvedCallback, onResolveErrorCallback, extension) => {
+                        // console.log('[resolveSymbol]: Method call', symbolName);
+                        let type = "forex";
+                        if (['ETHUSD', 'BTCUSD'].indexOf(symbolName) > -1) type = 'crypto';
+                        if (['US30', 'NAS100'].indexOf(symbolName) > -1) type = 'index';
+                        let session = "2200-2200";
+                        if (type === 'crypto') session = '24x7';
+                        if (symbolName === "XTIUSD") session = '2200-2100';
+
+                        const config = {
+                            "name": symbolName,
+                            "ticker": symbolName,
+                            "description": symbolName,
+                            "type": type,
+                            "session": session,
+                            "exchange": "FXSSI",
+                            "listed_exchange": "",
+                            "minmovement": 1,
+                            "pricescale": 10000,
+                            "pointvalue": 100,
+                            "minmovement2": 100,
+                            "fractional": false,
+                            // "suported_resolutions": [
+                            //     "5",
+                            //     "15",
+                            //     "30",
+                            //     "60",
+                            //     "240",
+                            // ],
+                            "has_intraday": true,
+                            // "intraday_multipliers": [
+                            //     "5",
+                            //     "15",
+                            //     "30",
+                            //     "60",
+                            //     "240",
+                            // ],
+                            "has_seconds": false,
+                            "seconds_multipliers": [],
+                            "has_daily": true,
+                            "has_weekly_and_monthly": true,
+                            "has_empty_bars": true,
+                            "force_session_rebuild": true,
+                            "visible_plots_set": "ohlc",
+                            "volume_precision": 1,
+                            "data_status": "streaming",
+                            "expired": false,
+                            "sector": "",
+                            "industry": ""
+            //                    "currency_code": "EURUSD"
+                        }
+
+                        // console.log(config);
+                        onSymbolResolvedCallback(config);
+                    },
+                    
+                    getBars: async function (symbolInfo, resolution, periodParams, onHistoryCallback, onErrorCallback) {
+                        // const url = `${GITHUB_DATA_BASE}/history/${symbolInfo.name}_${resolution}.json`;
+                        const url = `${GITHUB_DATA_BASE}/data/history/${symbolInfo.name}_${resolution}.json`;
+                        console.log("Fetching URL:", url); // Log untuk debug
+                        
+                        try {
+                            const response = await fetch(url);
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+                            const json = await response.json();
+                            console.log("Data received:", json); // Log respons
+                            
+                            // Proses data dan simpan di buffer
+                            for (let bar of json.bars) {
+                                for (let key in bar) {
+                                    if (['time', 'open', 'low', 'high', 'close'].indexOf(key) < 0) {
+                                        if (!window.ssiBuffers) window.ssiBuffers = {};
+                                        if (!window.ssiBuffers[key]) window.ssiBuffers[key] = {};
+                                        window.ssiBuffers[key][bar['time']] = bar[key];
+                                    }
+                                }
+                            }
+                            
+                            onHistoryCallback(json.bars);
+                        } catch (error) {
+                            console.error(`Failed to load data for ${symbolInfo.name} at ${resolution}:`, error);
+                            onHistoryCallback([], {noData: true});
+                        }
+                    },
+                    subscribeBars: () => {}, // Kosongkan karena tidak real-time
+                    unsubscribeBars: () => {} // Kosongkan karena tidak real-time
+                },
+                locale: "en",
+                disabled_features: ["header_compare", "header_screenshot", "header_saveload"],
+                custom_indicators_getter: function (PineJS) {
+                    window.PineJS = PineJS;
+                    return Promise.resolve([
+                        __prorat_buy_sell__, __prorat_signal__, __prorat_delta__,
+                        __interest_orders__, __interest_orders_delta__, __interest_positions__, __interest_positions_delta__,
+                        __activity_increase__, __activity_increase_delta__, __activity_decrease__, __activity_decrease_delta__,
+                        __ratios__, __derivatives__
+                    ]);
+                }
+            });
+            
+            // ======= FUNGSI HEATMAP YANG DIMODIFIKASI ========
+            function initHeatMap() {
+                const chart = widget.chart(), interval = 10;
+                let priceTo, priceFrom, paneHeight, paneWidth, timeTo, timeFrom, map, xRatio;
+                let symbol = chart.symbol();
+                let enabled = true;
+
+                chart.onSymbolChanged()(
+                    null,
+                    () => {
+                        symbol = chart.symbol();
+                        map.remove();
+                        tryHeatmap();
+                    }
+                );
+
+                function adjustHeatmap() {
+                            if (!map) return;
+                            // const xRatio = paneWidth / (timeTo - timeFrom);
+                            const scale = chart.getTimeScale();
+                            map.style.display = 'none';
+                            if (!widget.heatmap[symbol]) return;
+                            map.style.display = 'block';
+                            // mapTimes = widget.heatmap[symbol].times ?? null;
+                            // mapPrices = widget.heatmap[symbol].prices ?? null;
+                            // step = widget.heatmap[symbol].step ?? null;
+                            // if (!mapTimes || !mapPrices.length || !step) return;
+                            // console.log(mapTimes, mapPrices, step);
+
+                            // debugger;
+                            const yRatio = paneHeight / (priceTo - priceFrom);
+                            // console.log(width);
+                            // console.log(scale.rightOffset());
+                            // mapTime
+
+
+                            const mapWidth = widget.heatmap[symbol]['image-resolution'][0] * widget.heatmap[symbol]['resolution']; // in time
+                            const mapHeight = widget.heatmap[symbol]['image-resolution'][1] * widget.heatmap[symbol]['step']; // in price
+
+                            let lastBar = chart?.getSeries()?.data()?.m_bars?._end;
+                            if (lastBar > 0) {
+                                let lastBarTime = chart.getSeries().data().m_bars._items[lastBar - 1].timeMs / 1000;
+                                const timeDiff = (lastBarTime - widget.heatmap[symbol]['times'][1]);
+
+                                // timeDiff
+                                // console.log(());
+
+                                // let top = price2PaneTop(bucket.price);
+                                map.style.width = mapWidth * xRatio + "px";
+                                // console.log((timeTo - timeFrom) / 60 / 24, "hours");
+                                map.style.height = mapHeight * yRatio + "px";
+                                map.style.right = (scale.rightOffset() * scale.barSpacing()) + timeDiff * xRatio + 'px';
+                                // console.log(timeDiff * xRatio);
+
+                                // TODO this step if for pretty look
+                                map.style.top = (priceTo - widget.heatmap[symbol]['prices'][1] - widget.heatmap[symbol]['step']) * yRatio + "px";
+                            }
+                            // book.style.height = (y1 - y2) + "px";
+                            // debugger;
+                        }
+
+                function tryHeatmap() {
+                        function cycle() {
+                            console.log("trying map");
+                            if (!createHeatMap()) {
+                                setTimeout(cycle, 500);
+                            }
+                        }
+
+                        setTimeout(cycle, 500);
+                    }
+
+                function createHeatMap() {
+                    if (!chart.getSeries()) return false;
+                    symbol = chart.symbol();
+                    map = document.getElementById(widget._id).contentWindow.document.getElementById('slc');
+
+                    if (map === null) {
+                        map = document.createElement("img");
+                        map.id = "slc";
+                        map.style.width = "300px";
+                        map.style.position = "absolute";
+
+                        map.style['top'] = 0;
+                        map.style['right'] = 0;
+                        map.style['cursor'] = 'pointer';
+                        map.style['pointer-events'] = 'none';
+                        map.style['mix-blend-mode'] = 'darken';
+                        // if (document.location.protocol === 'https:')
+                        //     prefix = "https://fxssi.net";
+                        map.src = `${GITHUB_DATA_BASE}/data/heatmap/${symbol}.png`;
+                        document.getElementById(widget._id).contentWindow.document.querySelector(".pane .chart-gui-wrapper").appendChild(map);
+                    } else {
+                        map.src = `${GITHUB_DATA_BASE}/data/heatmap/${symbol}.png`;
+                    }
+                    /*
+                    symbol = chart.symbol();
+                    map = document.createElement("img");
+                    map.id = "slc";
+                    map.style.cssText = `
+                        position: absolute;
+                        top: 0;
+                        right: 0;
+                        cursor: pointer;
+                        pointer-events: none;
+                        mix-blend-mode: darken;
+                    `;
+                    
+                    map.src = `${GITHUB_DATA_BASE}/data/heatmap/${symbol}.png`;
+                    // document.querySelector(".pane .chart-gui-wrapper").appendChild(map);
+                    document.getElementById(widget._id).contentWindow.document.querySelector(".pane .chart-gui-wrapper").appendChild(map);
+                    */
+                    
+                    adjustHeatmap();
+                    return true;
+                }
+            
+                function monitorPriceScale() {
+            
+                widget.headerReady().then(function () {
+                    if (!('__slc_button' in window)) {
+                        __slc_button = widget.createButton();
+                        __slc_button.classList.add('ssi-toggle', 'active');
+                        __slc_button.addEventListener('click', function () {
+                            __slc_button.classList.toggle('active');
+                            enabled = __slc_button.classList.contains('active');
+                            map.style.visibility = enabled ? 'visible' : 'hidden';
+                        });
+                        __slc_button.textContent = 'SLC';
+                    }
+                });
+
+                setTimeout(monitorPriceScale, interval);
+            }                
+
+            
+                const panes = chart.getPanes();
+                if (!panes) return;
+
+                const scale = chart.getTimeScale();
+                if (!scale) return;
+                const shift = scale.rightOffset() * chart.resolution() * 60;
+                const _timeTo = chart.getVisibleRange().to + shift;
+                const _timeFrom = chart.getVisibleRange().from;
+                const _xRatio = scale.barSpacing() / (chart.resolution() * 60);
+
+                let adjust = false;
+                if (timeFrom !== _timeFrom || timeTo !== _timeTo || xRatio !== _xRatio) {
+                    if (!map) createHeatMap();
+
+                    paneWidth = scale.width();
+                    timeTo = _timeTo;
+                    timeFrom = _timeFrom;
+                    xRatio = _xRatio;
+
+                    adjust = true;
+                }
+
+
+                const pane = panes[0];
+                try {
+                    const scale = pane?.getMainSourcePriceScale();
+                    const range = scale?.getVisiblePriceRange();
+                    if (range) {
+                        if (priceFrom !== range.from || priceTo !== range.to) {
+                            if (!map) createHeatMap();
+
+                            paneHeight = pane.getHeight();
+                            priceTo = range.to;
+                            priceFrom = range.from;
+
+                            adjust = true;
+                        }
+                    }
+                } catch (e) {
+                    // console.error(e);
+                }
+
+                if (adjust) adjustHeatmap();
+                setTimeout(monitorPriceScale, interval);
+            }
+
+            // ======= INISIALISASI WIDGET ========
+            widget.onChartReady(function () {
+                initHeatMap();
+                
+                widget.createDropdown(
+                {
+                    title: 'FXSSI Indicators',
+                    icon: '<svg ' +
+                        ' xmlns="http://www.w3.org/2000/svg" width="32" height="32"  viewBox="200 300 140 220"' +
+                        ' enable-background="new 200 200 500 500" xml:space="preserve">' +
+                        '<polygon fill="#F29142" points="294.4,343.2 294.4,376.42 268.25,388.57 232.49,405.18 232.49,371.96 268.25,355.35 "/>' +
+                        '<polygon fill="#D57629" points="232.487,371.96 232.487,405.176 268.249,388.568 "/>' +
+                        '<polygon fill="#3A455A" points="304.01,405.18 304.01,438.39 268.25,421.78 232.49,405.18 268.25,388.57 "/>' +
+                        '<polygon fill="#3A455A" points="304.01,405.18 268.25,421.78 232.49,405.18 268.25,388.57 "/>' +
+                        '<polygon fill="#F29142" points="294.4,343.2 294.4,376.42 268.25,388.57 232.49,371.96 268.25,355.35 "/>' +
+                        '<polygon fill="#505ECA" points="304.01,405.176 268.254,421.782 268.25,421.78 232.49,438.39 232.49,471.61 304.007,438.391 ' +
+                        '304.01,438.393 "/>' +
+                        '<polygon fill="#8B96FB" points="304.01,438.39 232.49,471.61 232.49,438.39 268.25,421.78 "/>' +
+                        '<polygon fill="#505ECA" points="304.01,438.393 304.01,405.176 268.249,421.785 "/>' +
+                        '</svg>',
+                    // tooltip: 'FXSSI Tools',
+                    items: [
+                        {
+                            title: 'ProfitRatio (BUY:SELL)',
+                            onSelect: (e) => {
+                                // profit-ratio-buy-sell@tv-basicstudies-1
+                                widget.activeChart().createStudy('ProfitRatio (BUY:SELL)', false, false, [true], null, {});
+                                // widget.activeChart().getAllStudies().forEach(({name}) => console.log(name));
+                            },
+                        },
+                        {
+                            title: 'ProfitRatio (Signal)',
+                            onSelect: (e) => {
+                                widget.activeChart().createStudy('ProfitRatio (Signal)', false, false, [true], null, {});
+                                // widget.activeChart().getAllStudies().forEach(({name}) => console.log(name));
+                            },
+                        },
+                        {
+                            title: 'ProfitRatio (Delta)',
+                            onSelect: (e) => {
+                                widget.activeChart().createStudy('ProfitRatio (Delta)', false, false, [true], null, {});
+                                // widget.activeChart().getAllStudies().forEach(({name}) => console.log(name));
+                            },
+                        },
+                        {
+                            title: 'Open Interest (Orders)',
+                            onSelect: () => {
+                                widget.activeChart().createStudy('OpenInterest (Orders)', false, false, [true], null, {});
+                                widget.activeChart().createStudy('OpenInterest (Orders,Delta)', false, false, [true], null, {}).then(id => {
+                                    widget.activeChart().getStudyById(id).mergeUp();
+                                });
+                            },
+                        },
+                        // {
+                        //     title: 'Open Interest (Orders, Delta)',
+                        //     onSelect: () => {
+                        //         widget.activeChart().createStudy('OpenInterest (Orders,Delta)', false, false, [true], null, {});
+                        //     },
+                        // },
+                        {
+                            title: 'Open Interest (Positions)',
+                            onSelect: () => {
+                                widget.activeChart().createStudy('OpenInterest (Positions)', false, false, [true], null, {});
+                                widget.activeChart().createStudy('OpenInterest (Positions,Delta)', false, false, [true], null, {}).then(id => {
+                                    widget.activeChart().getStudyById(id).mergeUp();
+                                });
+                            },
+                        },
+                        // {
+                        //     title: 'Open Interest (Positions, Delta)',
+                        //     onSelect: () => {
+                        //         widget.activeChart().createStudy('OpenInterest (Positions,Delta)', false, false, [true], null, {});
+                        //     },
+                        // },
+                        {
+                            title: 'Trading Activity (Increase)',
+                            onSelect: () => {
+                                widget.activeChart().createStudy('TradingActivity (Increase)', false, false, [true], null, {});
+                                widget.activeChart().createStudy('TradingActivity (Increase,Delta)', false, false, [true], null, {}).then(id => {
+                                    widget.activeChart().getStudyById(id).mergeUp();
+                                });
+                            },
+                        },
+                        // {
+                        //     title: 'Trading Activity (Increase,Delta)',
+                        //     onSelect: () => {
+                        //         widget.activeChart().createStudy('TradingActivity (Increase,Delta)', false, false, [true], null, {});
+                        //     },
+                        // },
+                        {
+                            title: 'Trading Activity (Decrease)',
+                            onSelect: () => {
+                                widget.activeChart().createStudy('TradingActivity (Decrease)', false, false, [true], null, {});
+                                widget.activeChart().createStudy('TradingActivity (Decrease,Delta)', false, false, [true], null, {}).then(id => {
+                                    widget.activeChart().getStudyById(id).mergeUp();
+                                });
+                            },
+                        },
+                        // {
+                        //     title: 'Trading Activity (Decrease,Delta)',
+                        //     onSelect: () => {
+                        //         widget.activeChart().createStudy('TradingActivity (Decrease,Delta)', false, false, [true], null, {});
+                        //     },
+                        // },
+                        {
+                            title: 'Ratios',
+                            onSelect: () => {
+                                widget.activeChart().createStudy('Ratios', false, false, [true], null, {});
+                            },
+                        },
+                        {
+                            title: 'Derivatives',
+                            onSelect: () => {
+                                widget.activeChart().createStudy('Derivatives', false, false, [true], null, {});
+                            },
+                        }
+                    ]
+                }
+            ).then(myDropdownApi => {
+                    // Use myDropdownApi if you need to update the dropdown:
+                    // myDropdownApi.applyOptions({
+                    //     title: 'a new title!'
+                    // });
+
+                    // Or remove the dropdown:
+                    // myDropdownApi.remove();
+                });
+            });
+            
+            
+            
+        }
+
+        window.addEventListener('DOMContentLoaded', initOnReady, false);
+    })();
+</script>
 </html>
