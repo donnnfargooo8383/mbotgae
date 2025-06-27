@@ -1513,6 +1513,7 @@
         }
 
         function initOnReady() {
+            widget.heatmap = {};
             // ======= FUNGSI UTILITAS ========
             function getURLParameter(name, url) {
                 if (!url) url = location.href;
@@ -1522,6 +1523,162 @@
                 var results = regex.exec(url);
                 return results == null ? undefined : results[1];
             }
+            
+            // ======= INISIALISASI WIDGET ========
+            widget.onChartReady(function () {
+                // widget.activeChart().createStudy('ProfitRatio', false, false, [true], null, {});
+                // widget.activeChart().createStudy('MVP', true, false, [true], null, {});
+                // widget.addCustomCSSFile("/tv/tv.css");
+                // widget.applyOverrides({"barStyle.downColor": "#fd8606"});
+                console.log("Chart Ready");
+                initHeatMap();
+                // widget.activeChart().crossHairMoved().subscribe(
+                //     null,
+                //     ({ time, price }) => console.log(time, price)
+                // );
+                widget.activeChart().onDataLoaded().subscribe(
+                    null,
+                    (e) => {
+                        // console.log('New history bars are loaded', e)
+                    },
+                    false
+                );
+
+                widget.activeChart().onSymbolChanged().subscribe(
+                    null,
+                    () => {
+                        setURLParameter('symbol', widget.activeChart().symbol());
+                    }
+                );
+
+                // function createOrClose(study_id) {
+                //     widget.activeChart().getStudyById(study_id)
+                // }
+
+                widget.createDropdown(
+                    {
+                        title: 'FXSSI Indicators',
+                        icon: '<svg ' +
+                            ' xmlns="http://www.w3.org/2000/svg" width="32" height="32"  viewBox="200 300 140 220"' +
+                            ' enable-background="new 200 200 500 500" xml:space="preserve">' +
+                            '<polygon fill="#F29142" points="294.4,343.2 294.4,376.42 268.25,388.57 232.49,405.18 232.49,371.96 268.25,355.35 "/>' +
+                            '<polygon fill="#D57629" points="232.487,371.96 232.487,405.176 268.249,388.568 "/>' +
+                            '<polygon fill="#3A455A" points="304.01,405.18 304.01,438.39 268.25,421.78 232.49,405.18 268.25,388.57 "/>' +
+                            '<polygon fill="#3A455A" points="304.01,405.18 268.25,421.78 232.49,405.18 268.25,388.57 "/>' +
+                            '<polygon fill="#F29142" points="294.4,343.2 294.4,376.42 268.25,388.57 232.49,371.96 268.25,355.35 "/>' +
+                            '<polygon fill="#505ECA" points="304.01,405.176 268.254,421.782 268.25,421.78 232.49,438.39 232.49,471.61 304.007,438.391 ' +
+                            '304.01,438.393 "/>' +
+                            '<polygon fill="#8B96FB" points="304.01,438.39 232.49,471.61 232.49,438.39 268.25,421.78 "/>' +
+                            '<polygon fill="#505ECA" points="304.01,438.393 304.01,405.176 268.249,421.785 "/>' +
+                            '</svg>',
+                        // tooltip: 'FXSSI Tools',
+                        items: [
+                            {
+                                title: 'ProfitRatio (BUY:SELL)',
+                                onSelect: (e) => {
+                                    // profit-ratio-buy-sell@tv-basicstudies-1
+                                    widget.activeChart().createStudy('ProfitRatio (BUY:SELL)', false, false, [true], null, {});
+                                    // widget.activeChart().getAllStudies().forEach(({name}) => console.log(name));
+                                },
+                            },
+                            {
+                                title: 'ProfitRatio (Signal)',
+                                onSelect: (e) => {
+                                    widget.activeChart().createStudy('ProfitRatio (Signal)', false, false, [true], null, {});
+                                    // widget.activeChart().getAllStudies().forEach(({name}) => console.log(name));
+                                },
+                            },
+                            {
+                                title: 'ProfitRatio (Delta)',
+                                onSelect: (e) => {
+                                    widget.activeChart().createStudy('ProfitRatio (Delta)', false, false, [true], null, {});
+                                    // widget.activeChart().getAllStudies().forEach(({name}) => console.log(name));
+                                },
+                            },
+                            {
+                                title: 'Open Interest (Orders)',
+                                onSelect: () => {
+                                    widget.activeChart().createStudy('OpenInterest (Orders)', false, false, [true], null, {});
+                                    widget.activeChart().createStudy('OpenInterest (Orders,Delta)', false, false, [true], null, {}).then(id => {
+                                        widget.activeChart().getStudyById(id).mergeUp();
+                                    });
+                                },
+                            },
+                            // {
+                            //     title: 'Open Interest (Orders, Delta)',
+                            //     onSelect: () => {
+                            //         widget.activeChart().createStudy('OpenInterest (Orders,Delta)', false, false, [true], null, {});
+                            //     },
+                            // },
+                            {
+                                title: 'Open Interest (Positions)',
+                                onSelect: () => {
+                                    widget.activeChart().createStudy('OpenInterest (Positions)', false, false, [true], null, {});
+                                    widget.activeChart().createStudy('OpenInterest (Positions,Delta)', false, false, [true], null, {}).then(id => {
+                                        widget.activeChart().getStudyById(id).mergeUp();
+                                    });
+                                },
+                            },
+                            // {
+                            //     title: 'Open Interest (Positions, Delta)',
+                            //     onSelect: () => {
+                            //         widget.activeChart().createStudy('OpenInterest (Positions,Delta)', false, false, [true], null, {});
+                            //     },
+                            // },
+                            {
+                                title: 'Trading Activity (Increase)',
+                                onSelect: () => {
+                                    widget.activeChart().createStudy('TradingActivity (Increase)', false, false, [true], null, {});
+                                    widget.activeChart().createStudy('TradingActivity (Increase,Delta)', false, false, [true], null, {}).then(id => {
+                                        widget.activeChart().getStudyById(id).mergeUp();
+                                    });
+                                },
+                            },
+                            // {
+                            //     title: 'Trading Activity (Increase,Delta)',
+                            //     onSelect: () => {
+                            //         widget.activeChart().createStudy('TradingActivity (Increase,Delta)', false, false, [true], null, {});
+                            //     },
+                            // },
+                            {
+                                title: 'Trading Activity (Decrease)',
+                                onSelect: () => {
+                                    widget.activeChart().createStudy('TradingActivity (Decrease)', false, false, [true], null, {});
+                                    widget.activeChart().createStudy('TradingActivity (Decrease,Delta)', false, false, [true], null, {}).then(id => {
+                                        widget.activeChart().getStudyById(id).mergeUp();
+                                    });
+                                },
+                            },
+                            // {
+                            //     title: 'Trading Activity (Decrease,Delta)',
+                            //     onSelect: () => {
+                            //         widget.activeChart().createStudy('TradingActivity (Decrease,Delta)', false, false, [true], null, {});
+                            //     },
+                            // },
+                            {
+                                title: 'Ratios',
+                                onSelect: () => {
+                                    widget.activeChart().createStudy('Ratios', false, false, [true], null, {});
+                                },
+                            },
+                            {
+                                title: 'Derivatives',
+                                onSelect: () => {
+                                    widget.activeChart().createStudy('Derivatives', false, false, [true], null, {});
+                                },
+                            }
+                        ]
+                    }
+                ).then(myDropdownApi => {
+                    // Use myDropdownApi if you need to update the dropdown:
+                    // myDropdownApi.applyOptions({
+                    //     title: 'a new title!'
+                    // });
+
+                    // Or remove the dropdown:
+                    // myDropdownApi.remove();
+                });
+            });
 
             // ======= DATA FEED YANG DIMODIFIKASI ========
             const widget = new TradingView.widget({
@@ -1694,17 +1851,103 @@
                     ]);
                 }
             });
-
-            widget.heatmap = {};
+            
             // ======= FUNGSI HEATMAP YANG DIMODIFIKASI ========
             function initHeatMap() {
-                const chart = widget.chart();
-                let map = null;
+                const chart = widget.chart(), interval = 10;
+                let priceTo, priceFrom, paneHeight, paneWidth, timeTo, timeFrom, map, xRatio;
                 let symbol = chart.symbol();
+                let enabled = true;
+
+                chart.onSymbolChanged()(
+                    null,
+                    () => {
+                        symbol = chart.symbol();
+                        map.remove();
+                        tryHeatmap();
+                    }
+                );
+
+                function adjustHeatmap() {
+                            if (!map) return;
+                            // const xRatio = paneWidth / (timeTo - timeFrom);
+                            const scale = chart.getTimeScale();
+                            map.style.display = 'none';
+                            if (!widget.heatmap[symbol]) return;
+                            map.style.display = 'block';
+                            // mapTimes = widget.heatmap[symbol].times ?? null;
+                            // mapPrices = widget.heatmap[symbol].prices ?? null;
+                            // step = widget.heatmap[symbol].step ?? null;
+                            // if (!mapTimes || !mapPrices.length || !step) return;
+                            // console.log(mapTimes, mapPrices, step);
+
+                            // debugger;
+                            const yRatio = paneHeight / (priceTo - priceFrom);
+                            // console.log(width);
+                            // console.log(scale.rightOffset());
+                            // mapTime
+
+
+                            const mapWidth = widget.heatmap[symbol]['image-resolution'][0] * widget.heatmap[symbol]['resolution']; // in time
+                            const mapHeight = widget.heatmap[symbol]['image-resolution'][1] * widget.heatmap[symbol]['step']; // in price
+
+                            let lastBar = chart?.getSeries()?.data()?.m_bars?._end;
+                            if (lastBar > 0) {
+                                let lastBarTime = chart.getSeries().data().m_bars._items[lastBar - 1].timeMs / 1000;
+                                const timeDiff = (lastBarTime - widget.heatmap[symbol]['times'][1]);
+
+                                // timeDiff
+                                // console.log(());
+
+                                // let top = price2PaneTop(bucket.price);
+                                map.style.width = mapWidth * xRatio + "px";
+                                // console.log((timeTo - timeFrom) / 60 / 24, "hours");
+                                map.style.height = mapHeight * yRatio + "px";
+                                map.style.right = (scale.rightOffset() * scale.barSpacing()) + timeDiff * xRatio + 'px';
+                                // console.log(timeDiff * xRatio);
+
+                                // TODO this step if for pretty look
+                                map.style.top = (priceTo - widget.heatmap[symbol]['prices'][1] - widget.heatmap[symbol]['step']) * yRatio + "px";
+                            }
+                            // book.style.height = (y1 - y2) + "px";
+                            // debugger;
+                        }
+
+                function tryHeatmap() {
+                        function cycle() {
+                            console.log("trying map");
+                            if (!createHeatMap()) {
+                                setTimeout(cycle, 500);
+                            }
+                        }
+
+                        setTimeout(cycle, 500);
+                    }
 
                 function createHeatMap() {
                     if (!chart.getSeries()) return false;
-                    
+                    symbol = chart.symbol();
+                    map = document.getElementById(widget._id).contentWindow.document.getElementById('slc');
+
+                    if (map === null) {
+                        map = document.createElement("img");
+                        map.id = "slc";
+                        map.style.width = "300px";
+                        map.style.position = "absolute";
+
+                        map.style['top'] = 0;
+                        map.style['right'] = 0;
+                        map.style['cursor'] = 'pointer';
+                        map.style['pointer-events'] = 'none';
+                        map.style['mix-blend-mode'] = 'darken';
+                        // if (document.location.protocol === 'https:')
+                        //     prefix = "https://fxssi.net";
+                        map.src = `${GITHUB_DATA_BASE}/data/heatmap/${symbol}.png`;
+                        document.getElementById(widget._id).contentWindow.document.querySelector(".pane .chart-gui-wrapper").appendChild(map);
+                    } else {
+                        map.src = `${GITHUB_DATA_BASE}/data/heatmap/${symbol}.png`;
+                    }
+                    /*
                     symbol = chart.symbol();
                     map = document.createElement("img");
                     map.id = "slc";
@@ -1718,152 +1961,79 @@
                     `;
                     
                     map.src = `${GITHUB_DATA_BASE}/data/heatmap/${symbol}.png`;
-                    document.querySelector(".pane .chart-gui-wrapper").appendChild(map);
+                    // document.querySelector(".pane .chart-gui-wrapper").appendChild(map);
+                    document.getElementById(widget._id).contentWindow.document.querySelector(".pane .chart-gui-wrapper").appendChild(map);
+                    */
+                    
+                    adjustHeatmap();
                     return true;
                 }
-
+            
+                function monitorPriceScale() {
+            
                 widget.headerReady().then(function () {
-                    const button = widget.createButton();
-                    button.classList.add('ssi-toggle', 'active');
-                    button.textContent = 'SLC';
-                    button.addEventListener('click', function() {
-                        button.classList.toggle('active');
-                        if (map) map.style.visibility = button.classList.contains('active') 
-                            ? 'visible' : 'hidden';
-                    });
+                    if (!('__slc_button' in window)) {
+                        __slc_button = widget.createButton();
+                        __slc_button.classList.add('ssi-toggle', 'active');
+                        __slc_button.addEventListener('click', function () {
+                            __slc_button.classList.toggle('active');
+                            enabled = __slc_button.classList.contains('active');
+                            map.style.visibility = enabled ? 'visible' : 'hidden';
+                        });
+                        __slc_button.textContent = 'SLC';
+                    }
                 });
-                
-                createHeatMap();
+
+                setTimeout(monitorPriceScale, interval);
+            }                
+
+            
+                const panes = chart.getPanes();
+                if (!panes) return;
+
+                const scale = chart.getTimeScale();
+                if (!scale) return;
+                const shift = scale.rightOffset() * chart.resolution() * 60;
+                const _timeTo = chart.getVisibleRange().to + shift;
+                const _timeFrom = chart.getVisibleRange().from;
+                const _xRatio = scale.barSpacing() / (chart.resolution() * 60);
+
+                let adjust = false;
+                if (timeFrom !== _timeFrom || timeTo !== _timeTo || xRatio !== _xRatio) {
+                    if (!map) createHeatMap();
+
+                    paneWidth = scale.width();
+                    timeTo = _timeTo;
+                    timeFrom = _timeFrom;
+                    xRatio = _xRatio;
+
+                    adjust = true;
+                }
+
+
+                const pane = panes[0];
+                try {
+                    const scale = pane?.getMainSourcePriceScale();
+                    const range = scale?.getVisiblePriceRange();
+                    if (range) {
+                        if (priceFrom !== range.from || priceTo !== range.to) {
+                            if (!map) createHeatMap();
+
+                            paneHeight = pane.getHeight();
+                            priceTo = range.to;
+                            priceFrom = range.from;
+
+                            adjust = true;
+                        }
+                    }
+                } catch (e) {
+                    // console.error(e);
+                }
+
+                if (adjust) adjustHeatmap();
+                setTimeout(monitorPriceScale, interval);
             }
 
-            // ======= INISIALISASI WIDGET ========
-            widget.onChartReady(function () {
-                initHeatMap();
-                
-                widget.createDropdown(
-                {
-                    title: 'FXSSI Indicators',
-                    icon: '<svg ' +
-                        ' xmlns="http://www.w3.org/2000/svg" width="32" height="32"  viewBox="200 300 140 220"' +
-                        ' enable-background="new 200 200 500 500" xml:space="preserve">' +
-                        '<polygon fill="#F29142" points="294.4,343.2 294.4,376.42 268.25,388.57 232.49,405.18 232.49,371.96 268.25,355.35 "/>' +
-                        '<polygon fill="#D57629" points="232.487,371.96 232.487,405.176 268.249,388.568 "/>' +
-                        '<polygon fill="#3A455A" points="304.01,405.18 304.01,438.39 268.25,421.78 232.49,405.18 268.25,388.57 "/>' +
-                        '<polygon fill="#3A455A" points="304.01,405.18 268.25,421.78 232.49,405.18 268.25,388.57 "/>' +
-                        '<polygon fill="#F29142" points="294.4,343.2 294.4,376.42 268.25,388.57 232.49,371.96 268.25,355.35 "/>' +
-                        '<polygon fill="#505ECA" points="304.01,405.176 268.254,421.782 268.25,421.78 232.49,438.39 232.49,471.61 304.007,438.391 ' +
-                        '304.01,438.393 "/>' +
-                        '<polygon fill="#8B96FB" points="304.01,438.39 232.49,471.61 232.49,438.39 268.25,421.78 "/>' +
-                        '<polygon fill="#505ECA" points="304.01,438.393 304.01,405.176 268.249,421.785 "/>' +
-                        '</svg>',
-                    // tooltip: 'FXSSI Tools',
-                    items: [
-                        {
-                            title: 'ProfitRatio (BUY:SELL)',
-                            onSelect: (e) => {
-                                // profit-ratio-buy-sell@tv-basicstudies-1
-                                widget.activeChart().createStudy('ProfitRatio (BUY:SELL)', false, false, [true], null, {});
-                                // widget.activeChart().getAllStudies().forEach(({name}) => console.log(name));
-                            },
-                        },
-                        {
-                            title: 'ProfitRatio (Signal)',
-                            onSelect: (e) => {
-                                widget.activeChart().createStudy('ProfitRatio (Signal)', false, false, [true], null, {});
-                                // widget.activeChart().getAllStudies().forEach(({name}) => console.log(name));
-                            },
-                        },
-                        {
-                            title: 'ProfitRatio (Delta)',
-                            onSelect: (e) => {
-                                widget.activeChart().createStudy('ProfitRatio (Delta)', false, false, [true], null, {});
-                                // widget.activeChart().getAllStudies().forEach(({name}) => console.log(name));
-                            },
-                        },
-                        {
-                            title: 'Open Interest (Orders)',
-                            onSelect: () => {
-                                widget.activeChart().createStudy('OpenInterest (Orders)', false, false, [true], null, {});
-                                widget.activeChart().createStudy('OpenInterest (Orders,Delta)', false, false, [true], null, {}).then(id => {
-                                    widget.activeChart().getStudyById(id).mergeUp();
-                                });
-                            },
-                        },
-                        // {
-                        //     title: 'Open Interest (Orders, Delta)',
-                        //     onSelect: () => {
-                        //         widget.activeChart().createStudy('OpenInterest (Orders,Delta)', false, false, [true], null, {});
-                        //     },
-                        // },
-                        {
-                            title: 'Open Interest (Positions)',
-                            onSelect: () => {
-                                widget.activeChart().createStudy('OpenInterest (Positions)', false, false, [true], null, {});
-                                widget.activeChart().createStudy('OpenInterest (Positions,Delta)', false, false, [true], null, {}).then(id => {
-                                    widget.activeChart().getStudyById(id).mergeUp();
-                                });
-                            },
-                        },
-                        // {
-                        //     title: 'Open Interest (Positions, Delta)',
-                        //     onSelect: () => {
-                        //         widget.activeChart().createStudy('OpenInterest (Positions,Delta)', false, false, [true], null, {});
-                        //     },
-                        // },
-                        {
-                            title: 'Trading Activity (Increase)',
-                            onSelect: () => {
-                                widget.activeChart().createStudy('TradingActivity (Increase)', false, false, [true], null, {});
-                                widget.activeChart().createStudy('TradingActivity (Increase,Delta)', false, false, [true], null, {}).then(id => {
-                                    widget.activeChart().getStudyById(id).mergeUp();
-                                });
-                            },
-                        },
-                        // {
-                        //     title: 'Trading Activity (Increase,Delta)',
-                        //     onSelect: () => {
-                        //         widget.activeChart().createStudy('TradingActivity (Increase,Delta)', false, false, [true], null, {});
-                        //     },
-                        // },
-                        {
-                            title: 'Trading Activity (Decrease)',
-                            onSelect: () => {
-                                widget.activeChart().createStudy('TradingActivity (Decrease)', false, false, [true], null, {});
-                                widget.activeChart().createStudy('TradingActivity (Decrease,Delta)', false, false, [true], null, {}).then(id => {
-                                    widget.activeChart().getStudyById(id).mergeUp();
-                                });
-                            },
-                        },
-                        // {
-                        //     title: 'Trading Activity (Decrease,Delta)',
-                        //     onSelect: () => {
-                        //         widget.activeChart().createStudy('TradingActivity (Decrease,Delta)', false, false, [true], null, {});
-                        //     },
-                        // },
-                        {
-                            title: 'Ratios',
-                            onSelect: () => {
-                                widget.activeChart().createStudy('Ratios', false, false, [true], null, {});
-                            },
-                        },
-                        {
-                            title: 'Derivatives',
-                            onSelect: () => {
-                                widget.activeChart().createStudy('Derivatives', false, false, [true], null, {});
-                            },
-                        }
-                    ]
-                }
-            ).then(myDropdownApi => {
-                    // Use myDropdownApi if you need to update the dropdown:
-                    // myDropdownApi.applyOptions({
-                    //     title: 'a new title!'
-                    // });
-
-                    // Or remove the dropdown:
-                    // myDropdownApi.remove();
-                });
-            });
         }
 
         window.addEventListener('DOMContentLoaded', initOnReady, false);
