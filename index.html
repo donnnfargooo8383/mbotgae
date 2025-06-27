@@ -10,21 +10,8 @@
 <body style="margin:0;">
 <div id="workspace" class="with-book o p">
     <div id="tv_chart_container"></div>
-    <div id="right_panel" class="_loading">
-        <div class="toolbar">
-            <div class="op-toggle toolbar-btn o p">
-                Orders + Positions
-            </div>
-            <div class="net-toggle toolbar-btn">
-                All
-            </div>
-        </div>
-        <div class="books"></div>
-        <div class="suspended-message">suspended...</div>
-        <div class="suspended-overlay"></div>
-        <div class="price-line"></div>
-        <div class="book-price-line"></div>
-    </div>
+    <div id="right_panel" class="_loading">        
+    </div>    
 </div>
 </body>
 <script type="text/javascript">
@@ -35,7 +22,7 @@
             "name": "Try it FREE",
             "plan-pro": true,
             "plan": "proplus",
-            "avatar": "/anonymous.png"
+            "avatar": "./anonymous.png"
         };
 
         // ========= KONFIGURASI UTAMA =========
@@ -1728,8 +1715,8 @@
             widget.headerReady().then(function () {
                 // Tombol akun
                 const avatarButton = widget.createButton({'align': 'right'});
-                avatarButton.classList.add('account-button', 'active');
-                avatarButton.addEventListener('click', () => window.open("/account/membership", '_blank').focus());
+                // avatarButton.classList.add('account-button', 'active');
+                // avatarButton.addEventListener('click', () => window.open("/account/membership", '_blank').focus());
                 
                 if (user.id > 0) {
                     const avatar = document.createElement("img");
@@ -1783,6 +1770,15 @@
                     } else {
                         map = document.createElement("img");
                         map.id = "slc";
+                        map.style.width = "300px";
+                        map.style.position = "absolute";
+
+                        map.style['top'] = 0;
+                        map.style['right'] = 0;
+                        map.style['cursor'] = 'pointer';
+                        map.style['pointer-events'] = 'none';
+                        map.style['mix-blend-mode'] = 'darken';
+                        /*
                         map.style.cssText = `
                             width: 300px;
                             position: absolute;
@@ -1792,6 +1788,7 @@
                             pointer-events: none;
                             mix-blend-mode: darken;
                         `;
+                        */
                         const container = document.getElementById(widget._id)?.contentWindow?.document
                             .querySelector(".pane .chart-gui-wrapper");
                         if (container) {
