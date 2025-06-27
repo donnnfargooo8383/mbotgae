@@ -1525,7 +1525,7 @@
             // ======= DATA FEED YANG DIMODIFIKASI ========
             const widget = new TradingView.widget({
                 fullscreen: true,
-                symbol: getURLParameter('symbol') ?? 'EURUSD',
+                symbol: getURLParameter('symbol') ?? 'XAUUSD',
                 interval: '20',
                 container: "tv_chart_container",
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -1549,31 +1549,13 @@
                     searchSymbols: (userInput, exchange, symbolType, onResultReadyCallback) => {
                         let symbols;
                         const crypto = [
-                            "BTCUSD",
-                            "ETHUSD",
+                            "BTCUSD"
                         ];
                         const forex = [
-                            "EURUSD",
-                            "XAUUSD",
-                            "EURGBP",
-                            "AUDJPY",
-                            "AUDUSD",
-                            "EURAUD",
-                            "EURCHF",
-                            "EURJPY",
-                            "GBPCHF",
-                            "GBPJPY",
-                            "GBPUSD",
-                            "NZDUSD",
-                            "USDCAD",
-                            "USDCHF",
-                            "USDJPY",
-                            "XAGUSD",
-                            "XTIUSD"
+                            "XAUUSD"
                         ];
                         const indexes = [
-                            "US30",
-                            "NAS100"
+                            "US30"
                         ];
                         if (symbolType === 'crypto')
                             symbols = crypto;
