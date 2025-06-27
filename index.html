@@ -74,6 +74,13 @@
                     try {
                         const response = await fetch(url);
                         const data = await response.json();
+
+                        console.debug(`[DEBUG] Data loaded:`, {
+                            symbol: symbolInfo.name,
+                            resolution,
+                            barsCount: data.bars?.length || 0
+                        });
+                        
                         onResult(data.bars, { noData: !data.bars.length });
                     } catch (error) {
                         console.error("Error loading data:", error);
