@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-    <title>XXXXX Ngancugdeh</title>
+    <title>Ngancugdeh XYZ</title>
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
     <script type="text/javascript" src="./charting_library.standalone.js"></script>
     <script type="text/javascript" src="./bundle.js"></script>
@@ -17,6 +17,8 @@
         const GITHUB_REPO = "mbotgae";
         const GITHUB_BRANCH = "main";
         const BASE_URL = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}`;
+
+        // ... [Kode indikator custom tetap sama] ...
 
         function initOnReady() {
             const widget = new TradingView.widget({
@@ -43,21 +45,36 @@
                     },                    
                     searchSymbols: (userInput, exchange, symbolType, onResultReadyCallback) => {
                         let symbols;
-                        const crypto = ["BTCUSD"];
-                        const forex = ["XAUUSD"];
-                        const indexes = [];
-                        
-                        if (symbolType === 'crypto') symbols = crypto;
-                        else if (symbolType === 'forex') symbols = forex;
-                        else if (symbolType === 'index') symbols = indexes;
-                        else symbols = crypto.concat(forex);
+                        const crypto = [
+                            "BTCUSD"
+                        ];
+                        const forex = [
+                            "XAUUSD"
+                        ];
+                        const indexes = [
+
+                        ];
+                        if (symbolType === 'crypto')
+                            symbols = crypto;
+                        else if (symbolType === 'forex')
+                            symbols = forex;
+                        else if (symbolType === 'index')
+                            symbols = indexes;
+                        else
+                            symbols = crypto.concat(forex);
 
                         let ret = [];
+                        let found_symbols = [];
                         for (let symbol of symbols) {
                             if (['ETHUSD', 'BTCUSD'].indexOf(symbol) > -1) symbolType = 'crypto';
                             if (['US30', 'NAS100'].indexOf(symbol) > -1) symbolType = 'index';
                             if (symbol.toLowerCase().indexOf(userInput.toLowerCase()) < 0) continue;
-                            
+                            found_symbols.push(symbol);
+                        }
+                        symbols = found_symbols.concat(symbols);
+                        symbols = symbols.filter((value, index, array) => array.indexOf(value) === index);
+
+                        for (let symbol of symbols) {
                             ret.push({
                                 "symbol": symbol,
                                 "ticker": symbol,
@@ -105,7 +122,6 @@
                             "sector": "",
                             "industry": ""
                         }
-
                         onSymbolResolvedCallback(config);
                     },
                                                                  
@@ -140,11 +156,6 @@
                             const json = await response.json();
                             window.chartDataCache[cacheKey] = json; // Simpan ke cache
                             
-                            // Simpan waktu bar terakhir
-                            if (json.bars && json.bars.length > 0) {
-                                window.lastBarTime = json.bars[json.bars.length - 1].time;
-                            }
-                            
                             for (let bar of json.bars) {
                                 for (let key in bar) {
                                     if (!['time', 'open', 'low', 'high', 'close'].includes(key)) {
@@ -167,7 +178,9 @@
                 disabled_features: ["header_compare", "header_screenshot", "header_saveload"],
                 custom_indicators_getter: function (_PineJS) {
                     window.PineJS = _PineJS;
-                    return Promise.resolve([]);
+                    return Promise.resolve([
+                        // ... [Daftar indikator custom] ...
+                    ]);
                 }
             });
 
@@ -213,11 +226,14 @@
                 let symbol = chart.symbol();
                 let enabled = true;
 
-                chart.onSymbolChanged().subscribe(null, () => {
-                    symbol = chart.symbol();
-                    if (map) map.remove();
-                    createHeatMap();
-                });
+                chart.onSymbolChanged().subscribe(
+                    null,
+                    () => {
+                        symbol = chart.symbol();
+                        if (map) map.remove();
+                        createHeatMap();
+                    }
+                );
 
                 function createHeatMap() {
                     const series = chart.getSeries();
@@ -285,22 +301,16 @@
                     
                     const heatmapData = widget.heatmap[symbol];
                     
-                    // PERBAIKAN UTAMA: Perhitungan posisi yang lebih akurat
-                    // 1. Konversi waktu jika perlu (milidetik ke detik)
-                    let heatmapTime = heatmapData.time;
-                    if (heatmapTime > 1000000000000) {
-                        heatmapTime = heatmapTime / 1000;
-                    }
-                    
-                    // 2. Gunakan waktu bar terakhir dari data history
-                    const lastBarTime = window.lastBarTime || heatmapTime;
-                    
-                    // 3. Hitung posisi vertikal
+                    // Perhitungan posisi vertikal yang lebih akurat
                     const priceDiff = heatmapData.price - priceFrom;
                     const topPosition = paneHeight - (priceDiff / (priceTo - priceFrom)) * paneHeight;
                     
-                    // 4. Hitung posisi horizontal (di ujung kanan - candle terakhir)
-                    const timeDiff = timeTo - lastBarTime;
+                    // Perhitungan waktu terakhir dari data JSON
+                    const lastBar = series.data().bars[series.data().bars.length - 1];
+                    const lastBarTime = lastBar ? lastBar.time : timeTo;
+                    
+                    // Perhitungan posisi horizontal dengan offset
+                    const timeDiff = lastBarTime - heatmapData.time;
                     const rightPosition = timeDiff * xRatio - (heatmapData.width * 0.5);
                     
                     map.style.top = `${topPosition}px`;
