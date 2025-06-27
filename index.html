@@ -1,395 +1,153 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-    <title>TradingView Tools - FXSSI</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
+    <title>Cugdeh TradingView Tools</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <script type="text/javascript" src="./charting_library.standalone.js"></script>
-    <script type="text/javascript" src="./bundle.js"></script>
-    <link rel="stylesheet" href="./wrpskc.css?v=3">
+    <style>
+        body { margin: 0; }
+        #tv_chart_container { 
+            width: 100%;
+            height: 100vh;
+        }
+    </style>
 </head>
-<body style="margin:0;">
-<div id="workspace">
+<body>
     <div id="tv_chart_container"></div>
-</div>
-</body>
-<script type="text/javascript">
-    (function () {
-        window.user = {"host":"fxssi.com","id":30747,"name":"Try it FREE","plan-pro":true,"plan":"proplus","avatar":"/anonymous.png"};
-        
-        // Konfigurasi GitHub untuk mengambil data
+
+    <script>
+        // Konfigurasi GitHub
         const GITHUB_OWNER = "donnnfargooo8383";
         const GITHUB_REPO = "mbotgae";
         const GITHUB_BRANCH = "main";
-        const GITHUB_DATA_BASE_URL = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/data`;
+        const GITHUB_BASE = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}`;
+        
+        // Inisialisasi TradingView
+        const widget = new TradingView.widget({
+            symbol: 'XAUUSD',
+            interval: '20',
+            container: "tv_chart_container",
+            datafeed: {
+                onReady: (callback) => {
+                    callback({
+                        supported_resolutions: ["15", "20", "30", "60", "240"],
+                        supports_marks: false,
+                        supports_time: true,
+                        exchanges: [{ value: 'Cugdeh', name: 'Cugdeh', desc: 'Cugdeh Data' }],
+                        symbols_types: [
+                            { name: 'crypto', value: 'crypto' },
+                            { name: 'forex', value: 'forex' }
+                        ]
+                    });
+                },
+                searchSymbols: (userInput, exchange, symbolType, callback) => {
+                    const symbols = {
+                        crypto: ["BTCUSD"],
+                        forex: ["XAUUSD"]
+                    };
+                    const results = symbols[symbolType]?.map(symbol => ({
+                        symbol,
+                        ticker: symbol,
+                        description: symbol,
+                        exchange: "Cugdeh",
+                        type: symbolType
+                    })) || [];
+                    callback(results);
+                },
+                resolveSymbol: (symbolName, onResolved) => {
+                    onResolved({
+                        name: symbolName,
+                        ticker: symbolName,
+                        description: symbolName,
+                        type: symbolName === "BTCUSD" ? "crypto" : "forex",
+                        session: "24x7",
+                        exchange: "Cugdeh",
+                        pricescale: 100,
+                        minmovement: 1,
+                        has_intraday: true,
+                        supported_resolutions: ["15", "20", "30", "60", "240"],
+                        data_status: "streaming"
+                    });
+                },
+                getBars: async (symbolInfo, resolution, params, onResult) => {
+                    const url = `${GITHUB_BASE}/data/history/${symbolInfo.name}_${resolution}.json`;
+                    try {
+                        const response = await fetch(url);
+                        const data = await response.json();
 
-        // ==== KONFIGURASI INDIKATOR (TETAP SAMA) ====
-        // [Semua definisi indikator tetap sama seperti sebelumnya]
-        // ... (__prorat_buy_sell__, __prorat_signal__, dll) ...
-
-        // ===== FUNGSI BANTUAN =====
-        function getURLParameter(name, url) {
-            if (!url) url = window.location.href;
-            name = name.replace(/[\[\]]/g, "\\$&");
-            const regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)");
-            const results = regex.exec(url);
-            if (!results) return null;
-            if (!results[2]) return '';
-            return decodeURIComponent(results[2].replace(/\+/g, " "));
-        }
-
-        function initOnReady() {
-
-            const widget = new TradingView.widget({
-                fullscreen: true,
-                symbol: getURLParameter('symbol') ?? 'XAUUSD',
-                interval: '20',
-                custom_css_url: "/tradingview-tools/tv.css?v=2",
-                container: "tv_chart_container",
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                save_load_adapter: {
-                    getAllCharts: function () {
-                        console.log("getAllCharts");
-                        return Promise.resolve({id: "main_chart", name: "main_chart", resolution: "15M", symbol: "XAUUSD"});
+                        console.debug(`[DEBUG] Data loaded:`, {
+                            symbol: symbolInfo.name,
+                            resolution,
+                            barsCount: data.bars?.length || 0
+                        });
+                        
+                        onResult(data.bars, { noData: !data.bars.length });
+                    } catch (error) {
+                        console.error("Error loading data:", error);
+                        onResult([], { noData: true });
                     }
                 },
-                datafeed: {
-                    onReady: (callback) => {
-                        callback({
-                            supported_resolutions: ["15", "20", "30", "60", "240"],
-                            supports_marks: true,
-                            supports_search: true,
-                            supports_time: true,
-                            exchanges: [{value: 'FXSSI', name: 'FXSSI', desc: 'FXSSI.com'}],
-                            symbols_types: [
-                                {name: 'crypto', value: 'crypto'},
-                                {name: 'forex', value: 'forex'},
-                                {name: 'index', value: 'index'},
-                            ]
-                        });
-                    },
-                                        // ... (implementasi pencarian simbol tetap sama) ...                    
-                    searchSymbols: (userInput, exchange, symbolType, onResultReadyCallback) => {
-                        let symbols;
-                        const crypto = [
-                            "BTCUSD",
-                            "ETHUSD",
-                        ];
-                        const forex = [
-                            "EURUSD",
-                            "XAUUSD",
-                            "EURGBP",
-                            "AUDJPY",
-                            "AUDUSD",
-                            "EURAUD",
-                            "EURCHF",
-                            "EURJPY",
-                            "GBPCHF",
-                            "GBPJPY",
-                            "GBPUSD",
-                            "NZDUSD",
-                            "USDCAD",
-                            "USDCHF",
-                            "USDJPY",
-                            "XAGUSD",
-                            "XTIUSD"
-                        ];
-                        const indexes = [
-                            "US30",
-                            "NAS100"
-                        ];
-                        if (symbolType === 'crypto')
-                            symbols = crypto;
-                        else if (symbolType === 'forex')
-                            symbols = forex;
-                        else if (symbolType === 'index')
-                            symbols = indexes;
-                        else
-                            symbols = crypto.concat(forex);
+                subscribeBars: () => {},
+                unsubscribeBars: () => {}
+            },
+            library_path: "/charting_library/",
+            disabled_features: [
+                "header_saveload",
+                "header_screenshot",
+                "header_compare",
+                "timezone_menu",
+                "volume_force_overlay",
+                "edit_buttons_in_legend",
+                "context_menus",
+                "control_bar",
+                "save_chart_properties_to_local_storage",
+                "load_chart_properties_from_local_storage"
+            ],
+            enabled_features: [
+                "study_templates",
+                "dont_show_boolean_study_arguments",
+                "hide_last_na_study_output",
+                "use_localstorage_for_settings"
+            ],
+            // charts_storage_url: "https://saveload.tradingview.com",
+            // charts_storage_api_version: "1.1",
+            // client_id: "tradingview.com",
+            // user_id: "public_user",
+            fullscreen: true,
+            autosize: true,
+            studies_overrides: {},
+            // custom_css_url: "/mbotgae/tv.css",
+            locale: "en",
+            studies_overrides: {
+                "volume.volume.color.0": "#FF0000",
+                "volume.volume.color.1": "#00FF00"
+            }
+        });
 
-                        let ret = [];
-                        let found_symbols = [];
-                        for (let symbol of symbols) {
-                            if (['ETHUSD', 'BTCUSD'].indexOf(symbol) > -1) symbolType = 'crypto';
-                            if (['US30', 'NAS100'].indexOf(symbol) > -1) symbolType = 'index';
-                            if (symbol.toLowerCase().indexOf(userInput.toLowerCase()) < 0) continue;
-                            found_symbols.push(symbol);
-                        }
-                        symbols = found_symbols.concat(symbols);
-                        symbols = symbols.filter((value, index, array) => array.indexOf(value) === index);
-
-                        for (let symbol of symbols) {
-                            // type = "forex";
-                            ret.push({
-                                "symbol": symbol,
-                                "ticker": symbol,
-                                // "full_name": symbol,
-                                "description": symbol,
-                                "exchange": "FXSSI",
-                                "type": symbolType
-                            });
-                        }
-
-                        onResultReadyCallback(ret);
-                    },
-                    
-                    // ... (implementasi resolusi simbol tetap sama) ...
-                    resolveSymbol: (symbolName, onSymbolResolvedCallback, onResolveErrorCallback, extension) => {
-                        // console.log('[resolveSymbol]: Method call', symbolName);
-                        let type = "forex";
-                        if (['ETHUSD', 'BTCUSD'].indexOf(symbolName) > -1) type = 'crypto';
-                        if (['US30', 'NAS100'].indexOf(symbolName) > -1) type = 'index';
-                        let session = "2200-2200";
-                        if (type === 'crypto') session = '24x7';
-                        if (symbolName === "XTIUSD") session = '2200-2100';
-
-                        const config = {
-                            "name": symbolName,
-                            "ticker": symbolName,
-                            "description": symbolName,
-                            "type": type,
-                            "session": session,
-                            "exchange": "FXSSI",
-                            "listed_exchange": "",
-                            "minmovement": 1,
-                            "pricescale": 10000,
-                            "pointvalue": 100,
-                            "minmovement2": 100,
-                            "fractional": false,
-                            // "suported_resolutions": [
-                            //     "5",
-                            //     "15",
-                            //     "30",
-                            //     "60",
-                            //     "240",
-                            // ],
-                            "has_intraday": true,
-                            // "intraday_multipliers": [
-                            //     "5",
-                            //     "15",
-                            //     "30",
-                            //     "60",
-                            //     "240",
-                            // ],
-                            "has_seconds": false,
-                            "seconds_multipliers": [],
-                            "has_daily": true,
-                            "has_weekly_and_monthly": true,
-                            "has_empty_bars": true,
-                            "force_session_rebuild": true,
-                            "visible_plots_set": "ohlc",
-                            "volume_precision": 1,
-                            "data_status": "streaming",
-                            "expired": false,
-                            "sector": "",
-                            "industry": ""
-            //                    "currency_code": "EURUSD"
-                        }
-
-                        // console.log(config);
-                        onSymbolResolvedCallback(config);
-                    },
-                        
-                    getBars: async function (symbolInfo, resolution, periodParams, onHistoryCallback, onErrorCallback) {
-                        const symbol = symbolInfo.name;
-                        const resolutionStr = resolution;
-                        
-                        // Format URL untuk data history dari GitHub
-                        const historyUrl = `${GITHUB_DATA_BASE_URL}/history/${symbol}_${resolutionStr}.json`;
-                        
-                        try {
-                            const response = await fetch(historyUrl);
-                            if (!response.ok) throw new Error('Failed to fetch data');
-                            const json = await response.json();
-                            
-                            // Simpan data ke window.ssiBuffers untuk indikator
-                            if (!window.ssiBuffers) window.ssiBuffers = {};
-                            for (let bar of json.bars) {
-                                for (let key in bar) {
-                                    if (!['time', 'open', 'low', 'high', 'close'].includes(key)) {
-                                        if (!window.ssiBuffers[key]) window.ssiBuffers[key] = {};
-                                        window.ssiBuffers[key][bar['time']] = bar[key];
-                                    }
-                                }
-                            }
-                            
-                            onHistoryCallback(json.bars);
-                        } catch (error) {
-                            console.error('Error fetching history data:', error);
-                            onHistoryCallback([], {noData: true});
-                        }
-                    },
-                    subscribeBars: () => {}, // Kosongkan karena tidak real-time
-                    unsubscribeBars: () => {} // Kosongkan karena tidak real-time
-                },
-                locale: "en",
-                disabled_features: ["header_compare", "header_screenshot", "header_saveload"],
-                enabled_features: [],
-                custom_indicators_getter: function (_PineJS) {
-                    window.PineJS = _PineJS;
-                    return Promise.resolve([
-                        __prorat_buy_sell__, __prorat_signal__, __prorat_delta__,
-                        __interest_orders__, __interest_orders_delta__, __interest_positions__, __interest_positions_delta__,
-                        __activity_increase__, __activity_increase_delta__, __activity_decrease__, __activity_decrease_delta__,
-                        __ratios__, __derivatives__
-                    ]);
-                }
-            });
-
-            widget.heatmap = {};
-
-            // ===== FUNGSI UNTUK HEATMAP (SLC) =====
-            function initHeatMap() {
-                const chart = widget.chart();
-                let map = null;
-
-                chart.onSymbolChanged().subscribe(null, () => {
-                    if (map) map.remove();
-                    initHeatMapImage();
-                });
-
-                function initHeatMapImage() {
-                    const symbol = chart.symbol();
-                    const heatmapUrl = `${GITHUB_DATA_BASE_URL}/heatmap/${symbol}.png`;
-                    
-                    map = document.createElement("img");
-                    map.id = "slc";
-                    map.style.cssText = `
-                        position: absolute;
-                        top: 0;
-                        right: 0;
-                        pointer-events: none;
-                        mix-blend-mode: darken;
-                        max-width: 50%;
-                    `;
-                    map.src = heatmapUrl;
-                    
-                    const chartContainer = document.getElementById(widget._id)
-                        .contentWindow.document.querySelector(".pane .chart-gui-wrapper");
-                    chartContainer.appendChild(map);
-                }
-
-                widget.headerReady().then(function () {
-                    const slcButton = widget.createButton();
-                    slcButton.classList.add('ssi-toggle', 'active');
-                    slcButton.textContent = 'SLC';
-                    slcButton.addEventListener('click', function() {
-                        slcButton.classList.toggle('active');
-                        map.style.visibility = slcButton.classList.contains('active') 
-                            ? 'visible' : 'hidden';
-                    });
-                });
-                
-                initHeatMapImage();
-            }            
-
-            widget.onChartReady(function() {
-                console.log("Chart Ready");
-                initHeatMap();
-                
-                // Tambahkan dropdown untuk indikator
-                widget.createDropdown({
-                    title: 'FXSSI Indicators',
-                    items: [
-                        {
-                            title: 'ProfitRatio (BUY:SELL)',
-                            onSelect: (e) => {
-                                // profit-ratio-buy-sell@tv-basicstudies-1
-                                widget.activeChart().createStudy('ProfitRatio (BUY:SELL)', false, false, [true], null, {});
-                                // widget.activeChart().getAllStudies().forEach(({name}) => console.log(name));
-                            },
-                        },
-                        {
-                            title: 'ProfitRatio (Signal)',
-                            onSelect: (e) => {
-                                widget.activeChart().createStudy('ProfitRatio (Signal)', false, false, [true], null, {});
-                                // widget.activeChart().getAllStudies().forEach(({name}) => console.log(name));
-                            },
-                        },
-                        {
-                            title: 'ProfitRatio (Delta)',
-                            onSelect: (e) => {
-                                widget.activeChart().createStudy('ProfitRatio (Delta)', false, false, [true], null, {});
-                                // widget.activeChart().getAllStudies().forEach(({name}) => console.log(name));
-                            },
-                        },
-                        {
-                            title: 'Open Interest (Orders)',
-                            onSelect: () => {
-                                widget.activeChart().createStudy('OpenInterest (Orders)', false, false, [true], null, {});
-                                widget.activeChart().createStudy('OpenInterest (Orders,Delta)', false, false, [true], null, {}).then(id => {
-                                    widget.activeChart().getStudyById(id).mergeUp();
-                                });
-                            },
-                        },
-                        // {
-                        //     title: 'Open Interest (Orders, Delta)',
-                        //     onSelect: () => {
-                        //         widget.activeChart().createStudy('OpenInterest (Orders,Delta)', false, false, [true], null, {});
-                        //     },
-                        // },
-                        {
-                            title: 'Open Interest (Positions)',
-                            onSelect: () => {
-                                widget.activeChart().createStudy('OpenInterest (Positions)', false, false, [true], null, {});
-                                widget.activeChart().createStudy('OpenInterest (Positions,Delta)', false, false, [true], null, {}).then(id => {
-                                    widget.activeChart().getStudyById(id).mergeUp();
-                                });
-                            },
-                        },
-                        // {
-                        //     title: 'Open Interest (Positions, Delta)',
-                        //     onSelect: () => {
-                        //         widget.activeChart().createStudy('OpenInterest (Positions,Delta)', false, false, [true], null, {});
-                        //     },
-                        // },
-                        {
-                            title: 'Trading Activity (Increase)',
-                            onSelect: () => {
-                                widget.activeChart().createStudy('TradingActivity (Increase)', false, false, [true], null, {});
-                                widget.activeChart().createStudy('TradingActivity (Increase,Delta)', false, false, [true], null, {}).then(id => {
-                                    widget.activeChart().getStudyById(id).mergeUp();
-                                });
-                            },
-                        },
-                        // {
-                        //     title: 'Trading Activity (Increase,Delta)',
-                        //     onSelect: () => {
-                        //         widget.activeChart().createStudy('TradingActivity (Increase,Delta)', false, false, [true], null, {});
-                        //     },
-                        // },
-                        {
-                            title: 'Trading Activity (Decrease)',
-                            onSelect: () => {
-                                widget.activeChart().createStudy('TradingActivity (Decrease)', false, false, [true], null, {});
-                                widget.activeChart().createStudy('TradingActivity (Decrease,Delta)', false, false, [true], null, {}).then(id => {
-                                    widget.activeChart().getStudyById(id).mergeUp();
-                                });
-                            },
-                        },
-                        // {
-                        //     title: 'Trading Activity (Decrease,Delta)',
-                        //     onSelect: () => {
-                        //         widget.activeChart().createStudy('TradingActivity (Decrease,Delta)', false, false, [true], null, {});
-                        //     },
-                        // },
-                        {
-                            title: 'Ratios',
-                            onSelect: () => {
-                                widget.activeChart().createStudy('Ratios', false, false, [true], null, {});
-                            },
-                        },
-                        {
-                            title: 'Derivatives',
-                            onSelect: () => {
-                                widget.activeChart().createStudy('Derivatives', false, false, [true], null, {});
-                            },
-                        }
-                    ]
-                });
-            });
-        }
-
-        window.addEventListener('DOMContentLoaded', initOnReady, false);
-    })();
-</script>
+        // Inisialisasi Heatmap
+        widget.onChartReady(() => {
+            const chart = widget.chart();
+            chart.createStudy('Moving Average', false, false, [10], null, { 'Plot.color': '#FF0000' });
+            
+            // Tambahkan heatmap
+            const heatmapImg = document.createElement('img');
+            heatmapImg.id = 'heatmap-overlay';
+            heatmapImg.style.position = 'absolute';
+            heatmapImg.style.zIndex = '10';
+            heatmapImg.style.pointerEvents = 'none';
+            heatmapImg.style.mixBlendMode = 'multiply';
+            document.querySelector('.chart-gui-wrapper').appendChild(heatmapImg);
+            
+            function updateHeatmap() {
+                const symbol = chart.getSymbol();
+                heatmapImg.src = `${GITHUB_BASE}/data/heatmap/${symbol}.svg?t=${Date.now()}`;
+                heatmapImg.style.width = '100%';
+                heatmapImg.style.height = '100%';
+            }
+            
+            chart.onSymbolChanged().subscribe(null, updateHeatmap);
+            updateHeatmap();
+        });
+    </script>
+</body>
 </html>
