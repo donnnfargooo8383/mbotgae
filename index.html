@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-    <title>iwir-iwir &cok njaran Tools </title>
+    <title>Retnet Tools </title>
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
     <script type="text/javascript" src="./charting_library.standalone.js"></script>
     <script type="text/javascript" src="./bundle.js"></script>
@@ -17,7 +17,7 @@
 <script type="text/javascript">
     (function () {
         window.user = {
-            "host": "fxssi.com",
+            "host": "t.me",
             "id": 30747,
             "name": "Try it FREE",
             "plan-pro": true,
@@ -1539,7 +1539,7 @@
                             supports_marks: true,
                             supports_search: true,
                             supports_time: true,
-                            exchanges: [{value: 'FXSSI', name: 'FXSSI', desc: 'FXSSI.com'}],
+                            exchanges: [{value: 'SAWO', name: 'SAWO', desc: 't.me'}],
                             symbols_types: [
                                 {name: 'crypto', value: 'crypto'},
                                 {name: 'forex', value: 'forex'},
@@ -1550,31 +1550,13 @@
                     searchSymbols: (userInput, exchange, symbolType, onResultReadyCallback) => {
                         let symbols;
                         const crypto = [
-                            "BTCUSD",
-                            "ETHUSD",
+                            "BTCUSD"
                         ];
                         const forex = [
-                            "EURUSD",
-                            "XAUUSD",
-                            "EURGBP",
-                            "AUDJPY",
-                            "AUDUSD",
-                            "EURAUD",
-                            "EURCHF",
-                            "EURJPY",
-                            "GBPCHF",
-                            "GBPJPY",
-                            "GBPUSD",
-                            "NZDUSD",
-                            "USDCAD",
-                            "USDCHF",
-                            "USDJPY",
-                            "XAGUSD",
-                            "XTIUSD"
+                            "XAUUSD"
                         ];
                         const indexes = [
-                            "US30",
-                            "NAS100"
+
                         ];
                         if (symbolType === 'crypto')
                             symbols = crypto;
@@ -1603,7 +1585,7 @@
                                 "ticker": symbol,
                                 // "full_name": symbol,
                                 "description": symbol,
-                                "exchange": "FXSSI",
+                                "exchange": "SAWO",
                                 "type": symbolType
                             });
                         }
@@ -1626,7 +1608,7 @@
                             "description": symbolName,
                             "type": type,
                             "session": session,
-                            "exchange": "FXSSI",
+                            "exchange": "SAWO",
                             "listed_exchange": "",
                             "minmovement": 1,
                             "pricescale": 10000,
@@ -1714,10 +1696,11 @@
 
             widget.headerReady().then(function () {
                 // Tombol akun
-                const avatarButton = widget.createButton({'align': 'right'});
+                // const avatarButton = widget.createButton({'align': 'right'});
                 // avatarButton.classList.add('account-button', 'active');
                 // avatarButton.addEventListener('click', () => window.open("/account/membership", '_blank').focus());
                 
+                /*
                 if (user.id > 0) {
                     const avatar = document.createElement("img");
                     avatar.classList.add('avatar');
@@ -1727,6 +1710,7 @@
                 } else {
                     avatarButton.innerHTML = "Sign In";
                 }
+                */
 
                 // Tombol reset
                 const resetButton = widget.createButton();
@@ -1761,6 +1745,52 @@
                 const chart = widget.chart();
                 let map = null;
 
+                function adjustHeatmap() {
+                    if (!map) return;
+                    // const xRatio = paneWidth / (timeTo - timeFrom);
+                    const scale = chart.getTimeScale();
+                    map.style.display = 'none';
+                    if (!widget.heatmap[symbol]) return;
+                    map.style.display = 'block';
+                    // mapTimes = widget.heatmap[symbol].times ?? null;
+                    // mapPrices = widget.heatmap[symbol].prices ?? null;
+                    // step = widget.heatmap[symbol].step ?? null;
+                    // if (!mapTimes || !mapPrices.length || !step) return;
+                    // console.log(mapTimes, mapPrices, step);
+
+                    // debugger;
+                    const yRatio = paneHeight / (priceTo - priceFrom);
+                    // console.log(width);
+                    // console.log(scale.rightOffset());
+                    // mapTime
+
+
+                    const mapWidth = widget.heatmap[symbol]['image-resolution'][0] * widget.heatmap[symbol]['resolution']; // in time
+                    const mapHeight = widget.heatmap[symbol]['image-resolution'][1] * widget.heatmap[symbol]['step']; // in price
+
+                    let lastBar = chart?.getSeries()?.data()?.m_bars?._end;
+                    if (lastBar > 0) {
+                        let lastBarTime = chart.getSeries().data().m_bars._items[lastBar - 1].timeMs / 1000;
+                        const timeDiff = (lastBarTime - widget.heatmap[symbol]['times'][1]);
+
+                        // timeDiff
+                        // console.log(());
+
+                        // let top = price2PaneTop(bucket.price);
+                        map.style.width = mapWidth * xRatio + "px";
+                        // console.log((timeTo - timeFrom) / 60 / 24, "hours");
+                        map.style.height = mapHeight * yRatio + "px";
+                        map.style.right = (scale.rightOffset() * scale.barSpacing()) + timeDiff * xRatio + 'px';
+                        // console.log(timeDiff * xRatio);
+
+                        // TODO this step if for pretty look
+                        map.style.top = (priceTo - widget.heatmap[symbol]['prices'][1] - widget.heatmap[symbol]['step']) * yRatio + "px";
+                    }
+                    // book.style.height = (y1 - y2) + "px";
+                    // debugger;
+                }
+
+                
                 function createHeatMap() {
                     const symbol = chart.symbol();
                     const mapElement = document.getElementById(widget._id)?.contentWindow?.document?.getElementById('slc');
@@ -1795,6 +1825,7 @@
                     
                     // Ambil heatmap dari GitHub
                     // map.src = `${BASE_URL}/data/heatmap/${symbol}.png?t=${Date.now()}`;
+                    adjustHeatmap();
                     return true;
                 }
 
