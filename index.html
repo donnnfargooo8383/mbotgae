@@ -3,6 +3,8 @@
 <head>
     <title>TradingView Tools - Cugdeh</title>
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
+    <!-- Tambahkan di index.html -->
+    <meta http-equiv="Content-Security-Policy" content="default-src *; img-src * data:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'">
     <script type="text/javascript" src="./charting_library.standalone.js"></script>
     <script type="text/javascript" src="./bundle.js"></script>
     <link rel="stylesheet" href="./wrpskc.css?v=3">
@@ -1709,7 +1711,9 @@
                         mix-blend-mode: darken;
                     `;
                     
-                    map.src = `${GITHUB_DATA_BASE}/heatmap/${symbol}.png`;
+                    // map.src = `${GITHUB_DATA_BASE}/heatmap/${symbol}.png`;
+                    // <!-- Di fungsi createHeatMap() -->
+                    map.src = `${GITHUB_DATA_BASE}/heatmap/${symbol}.png?t=${new Date().getTime()}`;
                     document.querySelector(".pane .chart-gui-wrapper").appendChild(map);
                     return true;
                 }
