@@ -14,7 +14,7 @@
     (function() {
         // [Kode indikator dan studi tetap sama] //
         window.user = {"host":"fxssi.com","id":30747,"name":"Try it FREE","plan-pro":true,"plan":"proplus","avatar":"https:\/\/fxssi.com\/images\/anonymous.png"};
-        
+
         function initOnReady() {
             const widget = new TradingView.widget({
                 // ... [Konfigurasi widget tetap sama] ... //
@@ -25,7 +25,7 @@
                 interval: '20',
                 // load_last_chart: true,
                 // user_id: 1, // IMPORTANT!
-                custom_css_url: "/tradingview-tools/tv.css?v=2",
+                custom_css_url: "/mbotgae/tv.css?v=2",
                 container: "tv_chart_container",
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 save_load_adapter: {
@@ -190,7 +190,7 @@
                     getBars: async function(symbolInfo, resolution, periodParams, onHistoryCallback) {
                         const symbol = symbolInfo.name;
                         const res = resolution;
-                        const url = `https://raw.githubusercontent.com/donnnfargooo8383/tradingview-tools/main/data/history/${symbol}_${res}.json`;
+                        const url = `https://raw.githubusercontent.com/donnnfargooo8383/mbotgae/main/data/history/${symbol}_${res}.json`;
                         
                         try {
                             const response = await fetch(url);
@@ -222,7 +222,9 @@
                     },
                     
                     // ... [Fungsi lainnya tetap] ... //
-                }
+                },
+                locale: "en",
+
             });
 
             // Inisialisasi Heatmap
@@ -230,7 +232,7 @@
                 widget.onChartReady(() => {
                     const chart = widget.chart();
                     const symbol = chart.symbol();
-                    const url = `https://raw.githubusercontent.com/donnnfargooo8383/tradingview-tools/main/data/heatmap/${symbol}.png`;
+                    const url = `https://raw.githubusercontent.com/donnnfargooo8383/mbotgae/main/data/heatmap/${symbol}.png`;
                     
                     // Buat elemen gambar heatmap
                     const heatmapImg = document.createElement('img');
