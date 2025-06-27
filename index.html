@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-    <title>CCCC Ngancugdeh</title>
+    <title>Tools Ngancugdeh</title>
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
     <script type="text/javascript" src="./charting_library.standalone.js"></script>
     <script type="text/javascript" src="./bundle.js"></script>
@@ -327,7 +327,7 @@
                     
                     // Perhitungan posisi horizontal dengan offset
                     const timeDiff = timeTo - heatmapData.time;
-                    const rightPosition = timeDiff * xRatio - (heatmapData.width * 0.5);
+                    const rightPosition = timeDiff * xRatio - (heatmapData.width * 0.5); // Penyesuaian offset
                     
                     map.style.top = `${topPosition}px`;
                     map.style.right = `${rightPosition}px`;
