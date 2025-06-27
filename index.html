@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-    <title>Tools Ngancugdeh</title>
+    <title>xTools mbotgae</title>
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
     <script type="text/javascript" src="./charting_library.standalone.js"></script>
     <script type="text/javascript" src="./bundle.js"></script>
@@ -12,6 +12,7 @@
 </body>
 <script type="text/javascript">
     (function () {        
+
         // ========= KONFIGURASI UTAMA =========
         const GITHUB_OWNER = "donnnfargooo8383";
         const GITHUB_REPO = "mbotgae";
@@ -144,7 +145,7 @@
                         // console.log(config);
                         onSymbolResolvedCallback(config);
                     },
-                                                                 
+                                         
                     getBars: async function (symbolInfo, resolution, periodParams, onHistoryCallback, onErrorCallback) {
                         const symbol = symbolInfo.name;
                         const cacheKey = `${symbol}_${resolution}`;
@@ -156,7 +157,6 @@
                         // Reset buffer jika resolusi berubah
                         if (window.currentResolution !== resolution) {
                             window.ssiBuffers = {};
-                            window.chartDataCache = {};
                             window.currentResolution = resolution;
                         }
                         
@@ -221,9 +221,8 @@
                 initHeatMap();
                 widget.activeChart().onSymbolChanged().subscribe(null, () => {
                     setURLParameter('symbol', widget.activeChart().symbol());
-                    window.ssiBuffers = {};
+                    window.ssiBuffers = {}; // Reset buffer saat ganti simbol
                     window.chartDataCache = {};
-                    initHeatMap(); // Reload heatmap untuk simbol baru
                 });
             });
 
@@ -238,42 +237,31 @@
                 return new URLSearchParams(window.location.search).get(name);
             }
 
-            // ========= HEATMAP (PERBAIKAN UTAMA) =========
+            // ========= HEATMAP =========
             function initHeatMap() {
                 const chart = widget.chart();
                 let map = null;
                 let paneHeight, priceFrom, priceTo, paneWidth, timeFrom, timeTo, xRatio;
-                let symbol = chart.symbol();
-                let enabled = true;
-
-                chart.onSymbolChanged().subscribe(
-                    null,
-                    () => {
-                        symbol = chart.symbol();
-                        if (map) map.remove();
-                        createHeatMap();
-                    }
-                );
 
                 function createHeatMap() {
-                    const series = chart.getSeries();
-                    if (!series) return false;
+                    const symbol = chart.symbol();
+                    const mapElement = document.getElementById(widget._id)?.contentWindow?.document?.getElementById('slc');
                     
-                    // Hapus heatmap lama jika ada
-                    const existingMap = document.getElementById(widget._id)?.contentWindow?.document?.getElementById('slc');
-                    if (existingMap) existingMap.remove();
+                    if (mapElement) {
+                        map = mapElement;
+                    } else {
+                        map = document.createElement("img");
+                        map.id = "slc";
+                        map.style.position = "absolute";
+                        map.style.top = "0";
+                        map.style.right = "0";
+                        map.style.cursor = "pointer";
+                        map.style.pointerEvents = "none";
+                        map.style.mixBlendMode = "darken";
+                        map.src = `${BASE_URL}/data/heatmap/${symbol}.png?t=${Date.now()}`;
+                        document.getElementById(widget._id).contentWindow.document.querySelector(".pane .chart-gui-wrapper").appendChild(map);
+                    }
                     
-                    map = document.createElement("img");
-                    map.id = "slc";
-                    map.style.position = "absolute";
-                    map.style.top = "0";
-                    map.style.right = "0";
-                    map.style.cursor = "pointer";
-                    map.style.pointerEvents = "none";
-                    map.style.mixBlendMode = "darken";
-                    map.src = `${BASE_URL}/data/heatmap/${symbol}.png?t=${Date.now()}`;
-                    
-                    document.getElementById(widget._id).contentWindow.document.querySelector(".pane .chart-gui-wrapper").appendChild(map);
                     adjustHeatmap();
                     return true;
                 }
@@ -307,27 +295,25 @@
                     xRatio = paneWidth / (timeTo - timeFrom);
                     
                     if (!widget.heatmap[symbol]) {
+                        // Load heatmap data
                         fetch(`${BASE_URL}/data/heatmap/${symbol}.json`)
                             .then(response => response.json())
                             .then(data => {
                                 widget.heatmap[symbol] = data;
                                 adjustHeatmap();
-                            })
-                            .catch(error => {
-                                console.error('Gagal memuat data heatmap:', error);
                             });
                         return;
                     }
                     
                     const heatmapData = widget.heatmap[symbol];
                     
-                    // Perhitungan posisi vertikal yang lebih akurat
+                    // Hitung posisi vertikal
                     const priceDiff = heatmapData.price - priceFrom;
                     const topPosition = paneHeight - (priceDiff / (priceTo - priceFrom)) * paneHeight;
                     
-                    // Perhitungan posisi horizontal dengan offset
+                    // Hitung posisi horizontal
                     const timeDiff = timeTo - heatmapData.time;
-                    const rightPosition = timeDiff * xRatio - (heatmapData.width * 0.5); // Penyesuaian offset
+                    const rightPosition = timeDiff * xRatio;
                     
                     map.style.top = `${topPosition}px`;
                     map.style.right = `${rightPosition}px`;
@@ -335,54 +321,6 @@
                     map.style.height = `${heatmapData.height}px`;
                 }
 
-                function monitorPriceScale() {
-                    if (!widget || !widget.chart()) return;
-                    
-                    const panes = widget.chart().getPanes();
-                    if (!panes || !panes[0]) {
-                        setTimeout(monitorPriceScale, 100);
-                        return;
-                    }
-                    
-                    try {
-                        const priceScale = panes[0].getMainSourcePriceScale();
-                        if (!priceScale) {
-                            setTimeout(monitorPriceScale, 100);
-                            return;
-                        }
-                        
-                        const priceRange = priceScale.getVisiblePriceRange();
-                        if (!priceRange) {
-                            setTimeout(monitorPriceScale, 100);
-                            return;
-                        }
-                        
-                        // Update hanya jika ada perubahan signifikan
-                        if (Math.abs(priceRange.to - priceTo) > 0.0001 || 
-                            Math.abs(priceRange.from - priceFrom) > 0.0001) {
-                            
-                            priceFrom = priceRange.from;
-                            priceTo = priceRange.to;
-                            paneHeight = panes[0].getHeight();
-                            
-                            const timeScale = widget.chart().getTimeScale();
-                            if (timeScale) {
-                                paneWidth = timeScale.width();
-                                const visibleRange = widget.chart().getVisibleRange();
-                                timeFrom = visibleRange.from;
-                                timeTo = visibleRange.to;
-                                xRatio = paneWidth / (timeTo - timeFrom);
-                            }
-                            
-                            adjustHeatmap();
-                        }
-                    } catch (e) {
-                        console.error('Error in monitorPriceScale:', e);
-                    }
-                    
-                    setTimeout(monitorPriceScale, 100);
-                }
-                
                 widget.headerReady().then(function () {
                     if (!window.__slc_button) {
                         window.__slc_button = widget.createButton();
@@ -399,6 +337,13 @@
                     }
                 });
 
+                function monitorPriceScale() {
+                    if (!chart || chart.isDestroyed()) return;
+                    
+                    adjustHeatmap();
+                    setTimeout(monitorPriceScale, 100);
+                }
+                
                 createHeatMap();
                 setTimeout(monitorPriceScale, 100);
             }
