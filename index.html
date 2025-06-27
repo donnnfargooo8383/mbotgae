@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-    <title>Ngancugdeh Tools</title>
+    <title>CCCC Ngancugdeh</title>
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
     <script type="text/javascript" src="./charting_library.standalone.js"></script>
     <script type="text/javascript" src="./bundle.js"></script>
@@ -279,7 +279,7 @@
                 }
 
                 function adjustHeatmap() {
-                    if (!map || !widget.heatmap[symbol]) return;
+                    if (!map) return;
                     
                     const series = chart.getSeries();
                     if (!series) return;
@@ -306,14 +306,28 @@
                     timeTo = visibleRange.to;
                     xRatio = paneWidth / (timeTo - timeFrom);
                     
-                    // Perhitungan posisi vertikal yang lebih akurat
+                    if (!widget.heatmap[symbol]) {
+                        fetch(`${BASE_URL}/data/heatmap/${symbol}.json`)
+                            .then(response => response.json())
+                            .then(data => {
+                                widget.heatmap[symbol] = data;
+                                adjustHeatmap();
+                            })
+                            .catch(error => {
+                                console.error('Gagal memuat data heatmap:', error);
+                            });
+                        return;
+                    }
+                    
                     const heatmapData = widget.heatmap[symbol];
+                    
+                    // Perhitungan posisi vertikal yang lebih akurat
                     const priceDiff = heatmapData.price - priceFrom;
                     const topPosition = paneHeight - (priceDiff / (priceTo - priceFrom)) * paneHeight;
                     
                     // Perhitungan posisi horizontal dengan offset
                     const timeDiff = timeTo - heatmapData.time;
-                    const rightPosition = timeDiff * xRatio - (heatmapData.width * 0.5); // Penyesuaian offset
+                    const rightPosition = timeDiff * xRatio - (heatmapData.width * 0.5);
                     
                     map.style.top = `${topPosition}px`;
                     map.style.right = `${rightPosition}px`;
