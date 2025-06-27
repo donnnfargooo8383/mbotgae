@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-    <title>TradingView Tools - FXSSI</title>
+    <title>JAN COKKK Tools - FXSSI</title>
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
     <script type="text/javascript" src="./charting_library.standalone.js"></script>
     <script type="text/javascript" src="./bundle.js"></script>
@@ -66,6 +66,16 @@
     
     <script type="text/javascript">
         (function () {
+
+            window.user = {
+                host: "fxssi.com",
+                id: 30747,
+                name: "Try it FREE",
+                "plan-pro": true,
+                plan: "proplus",
+                avatar: "/anonymous.png"
+            };
+            
             // Fungsi untuk mendapatkan parameter URL
             function getURLParameter(name, url) {
                 if (!url) url = window.location.href;
@@ -1640,15 +1650,7 @@
                     }
                 }
             }
-
-            window.user = {
-                host: "fxssi.com",
-                id: 30747,
-                name: "Try it FREE",
-                "plan-pro": true,
-                plan: "proplus",
-                avatar: "/anonymous.png"
-            };
+           
             
             // ======== INISIALISASI CHART ========
             function initOnReady() {
