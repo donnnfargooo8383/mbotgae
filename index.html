@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-    <title>JANCOK Tools - FXSSI</title>
+    <title>TradingView Tools - FXSSI</title>
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
     <script type="text/javascript" src="./charting_library.standalone.js"></script>
     <script type="text/javascript" src="./bundle.js"></script>
@@ -65,7 +65,7 @@
     </div>
     
     <script type="text/javascript">
-        // ======== FUNGSI UTAMA YANG DIPINDAHKAN ========
+        // ======== FUNGSI UTAMA YANG DIPERBAIKI ========
         function getURLParameter(name, url) {
             if (!url) url = window.location.href;
             name = name.replace(/[\[\]]/g, '\\$&');
@@ -75,11 +75,6 @@
             if (!results[2]) return '';
             return decodeURIComponent(results[2].replace(/\+/g, ' '));
         }
-
-        // Semua definisi indikator dari index.html
-        const __prorat_buy_sell__ = { /* ... definisi lengkap ... */ };
-        const __prorat_signal__ = { /* ... definisi lengkap ... */ };
-        // ... (Lengkapi dengan semua definisi indikator dari index.html)
 
         (function () {
             // Konfigurasi GitHub
@@ -172,6 +167,1487 @@
                 
                 showLoading(false);
                 return window.githubData.heatmap[symbol];
+            }
+
+            // ======== INDIKATOR CUSTOM ========
+            const __prorat_buy_sell__ = {
+                name: "ProfitRatio",
+                metainfo: {
+                    "_metainfoVersion": 40,
+                    "id": "profit-ratio-buy-sell@tv-basicstudies-1",
+                    "scriptIdPart": "",
+                    "name": "ProfitRatio (BUY:SELL)",
+                    "description": "ProfitRatio (BUY:SELL)",
+                    "shortDescription": "Profit Ratio (BUY:SELL)",
+                    "format": {type: 'percent'},
+                    "is_hidden_study": false,
+                    "is_price_study": false,
+                    "isCustomIndicator": true,
+                    // linkedToSeries: true,
+                    "plots": [
+                        {"id": "plot_buy", "type": "line"},
+                        {"id": "plot_sell", "type": "line"},
+                        {
+                            'id': 'plot_buy_colorer',
+                            'type': 'colorer',
+                            'target': 'plot_buy',
+                            'palette': 'paletteId1',
+                        },
+                        {
+                            'id': 'plot_sell_colorer',
+                            'type': 'colorer',
+                            'target': 'plot_sell',
+                            'palette': 'paletteId2',
+                        },
+                    ],
+                    palettes: {
+                        paletteId1: {
+                            colors: {
+                                0: {
+                                    name: 'Above Signal',
+                                },
+                                1: {
+                                    name: 'Below Signal',
+                                },
+                            },
+                        },
+                        paletteId2: {
+                            colors: {
+                                0: {
+                                    name: 'Above Signal',
+                                },
+                                1: {
+                                    name: 'Below Signal',
+                                },
+                            },
+                        },
+                    },
+                    bands: [
+                        {
+                            id: 'hline_75',
+                            name: '75%',
+                            zorder: -1.1,
+                        },
+                        {
+                            id: 'hline_25',
+                            name: '25%',
+                            zorder: -1.11,
+                        },
+                    ],
+                    "defaults": {
+                        palettes: {
+                            paletteId1: {
+                                colors: {
+                                    0: {
+                                        color: '#01a7bc',
+                                        width: 3,
+                                        style: 0,
+                                    },
+                                    1: {
+                                        color: '#01a7bc',
+                                        width: 1,
+                                        style: 0,
+                                    },
+                                },
+                            },
+                            paletteId2: {
+                                colors: {
+                                    0: {
+                                        color: '#fd8606',
+                                        width: 3,
+                                        style: 0,
+                                    },
+                                    1: {
+                                        color: '#fd8606',
+                                        width: 1,
+                                        style: 0,
+                                    },
+                                },
+                            },
+                        },
+
+                        "styles": {
+                            "plot_buy": {
+                                'title': "Buy",
+                                "linestyle": 0,
+                                "visible": true,
+                                "linewidth": 1,
+                                "plottype": 'line',
+                                "trackPrice": true,
+                                "transparency": 10,
+                                "color": "#01a7bc",
+                                "format": {type: 'percent'},
+                            },
+                            "plot_sell": {
+                                'title': "Sell",
+                                "linestyle": 0,
+                                "visible": true,
+                                "linewidth": 1,
+                                "plottype": 'line',
+                                "trackPrice": true,
+                                "transparency": 10,
+                                "color": "#fd8606",
+                                "format": {type: 'percent'},
+                            }
+                        },
+
+                        bands: [
+                            {
+                                color: '#787B86',
+                                linestyle: 2,
+                                linewidth: 1,
+                                visible: true,
+                                value: 75,
+                            },
+                            {
+                                color: '#787B86',
+                                linestyle: 2,
+                                linewidth: 1,
+                                visible: true,
+                                value: 25,
+                            }
+                        ],
+
+                        // Precision of the study's output values
+                        // (quantity of digits after the decimal separator).
+                        "precision": 2,
+
+                        "inputs": {}
+                    },
+                    "styles": {
+                        "plot_buy": {
+                            "title": "Buy",
+                        },
+                        "plot_sell": {
+                            "title": "Sell",
+                        }
+                    },
+                    "inputs": {}
+                },
+                "constructor": function () {
+                    this.main = function (context, inputCallback) {
+                        let ret = [];
+                        if (window.ssiBuffers) {
+                            ret = [
+                                window.ssiBuffers?.['prb']?.[context.symbol.time] * 100 ?? NaN,
+                                window.ssiBuffers?.['prs']?.[context.symbol.time] * 100 ?? NaN
+                            ];
+                            ret.push(ret[0] >= 75 || ret[0] <= 25 ? 0 : 1,
+                                ret[1] <= 25 || ret[1] >= 75 ? 0 : 1);
+                        }
+
+                        return ret;
+                    }
+                }
+            }
+
+            const __prorat_signal__ = {
+                name: "ProfitRatio",
+                metainfo: {
+                    "_metainfoVersion": 40,
+                    "id": "profit-ratio-signal@tv-basicstudies-1",
+                    "scriptIdPart": "",
+                    "name": "ProfitRatio (Signal)",
+                    "description": "ProfitRatio (Signal)",
+                    "shortDescription": "Profit Ratio (Signal)",
+                    "is_hidden_study": false,
+                    "is_price_study": false,
+                    "isCustomIndicator": true,
+                    "plots": [
+                        {"id": "plot_signal", "type": "line"},
+                        {"id": "plot_signal_avg", "type": "line"},
+                        // {
+                        //     'id': 'plot_signal_colorer',
+                        //     'type': 'colorer',
+                        //     'target': 'fill_0',
+                        //     'palette': 'paletteId1',
+                        // },
+                        // {
+                        //     'id': 'plot_signal_colorer2',
+                        //     'type': 'colorer',
+                        //     'target': 'plot_signal',
+                        //     'palette': 'paletteId2',
+                        // },
+                        {
+                            id: 'plot_diamantus',
+                            type: 'shapes'
+                        }
+                    ],
+                    palettes: {
+                        paletteId1: {
+                            valToIndex: {
+                                0: 0,
+                                1: 1,
+                            },
+                            colors: {
+                                0: {
+                                    name: 'Below Signal',
+                                },
+                                1: {
+                                    name: 'Above Signal',
+                                },
+                            },
+                        },
+                        paletteId2: {
+                            colors: {
+                                0: {
+                                    name: 'Below Signal',
+                                },
+                                1: {
+                                    name: 'Above Signal',
+                                },
+                            },
+                        },
+                    },
+                    // filledAreasStyle: {
+                    //     fill_0: {
+                    //         color: '#fd8606', // ignored because replaced by palette colours
+                    //         transparency: 50,
+                    //         visible: true,
+                    //         palette: 'paletteId1',
+                    //     },
+                    // },
+                    // filledAreas: [
+                    //     {
+                    //         id: 'fill_0',
+                    //         objAId: 'plot_signal',
+                    //         objBId: 'plot_signal_avg',
+                    //         type: 'plot_plot',
+                    //         title: 'Above Signal Fill',
+                    //         fillToIntersection: true,
+                    //         palette: 'paletteId1',
+                    //     },
+                    // ],
+                    "defaults": {
+                        palettes: {
+                            paletteId1: {
+                                colors: {
+                                    0: {
+                                        color: 'rgba(0,0,0,0)',
+                                    },
+                                    1: {
+                                        color: '#fd8606',
+                                        transparency: 50,
+                                    },
+                                },
+                            },
+                            paletteId2: {
+                                colors: {
+                                    0: {
+                                        color: '#858585',
+                                        style: 0,
+                                        width: 1,
+                                    },
+                                    1: {
+                                        color: '#fd8606',
+                                        style: 0,
+                                        width: 3,
+                                    },
+                                },
+                            },
+                        },
+                        "styles": {
+                            "plot_signal": {
+                                'title': "Signal",
+                                "linestyle": 0,
+                                "visible": true,
+                                "linewidth": 1,
+                                "plottype": 'line',
+                                "trackPrice": true,
+                                "transparency": 10,
+                                "color": "#858585"
+                            },
+                            "plot_signal_avg": {
+                                'title': "Signal",
+                                "linestyle": 0,
+                                "visible": true,
+                                "linewidth": 1,
+                                "plottype": 'line',
+                                "trackPrice": false,
+                                "transparency": 10,
+                                "color": "#0d71cf"
+                            },
+                            "plot_diamantus": {
+                                isHidden: true,
+                                location: 'Absolute',
+                                title: 'Diamantus',
+                                color: '#fd8606',
+                                "transparency": 0,
+                                plottype: 'shape_circle',
+                            }
+                        },
+
+                        // Precision of the study's output values
+                        // (quantity of digits after the decimal separator).
+                        "precision": 2,
+
+                        "inputs": {}
+                    },
+                    "styles": {
+                        "plot_signal": {
+                            "title": "Signal",
+                        },
+                        "plot_signal_avg": {
+                            "title": "Signal",
+                        }
+                    },
+                    "inputs": {}
+                },
+                "constructor": function () {
+                    this.main = function (context, inputCallback) {
+                        let ret = [];
+                        if (window.ssiBuffers) {
+                            ret = [
+                                window.ssiBuffers?.['ppr']?.[context.symbol.time] * 100 ?? NaN,
+                                window.ssiBuffers?.['pprs']?.[context.symbol.time] * 100 * 1.04 ?? NaN
+                            ];
+
+                            // ret.push(ret[0] > ret[1] ? 1 : 0);
+                            // ret.push(ret[2]);
+                            ret.push(ret[0] > ret[1] ? ret[0] : NaN);
+                        }
+
+                        return ret;
+                    }
+                }
+            }
+
+            const __prorat_delta__ = {
+                name: "ProfitRatio (Delta)",
+                metainfo: {
+                    "_metainfoVersion": 40,
+                    "id": "profit-ratio-delta@tv-basicstudies-1",
+                    "scriptIdPart": "",
+                    "name": "ProfitRatio (Delta)",
+                    "description": "ProfitRatio (Delta)",
+                    "shortDescription": "Profit Ratio (Delta)",
+                    "is_hidden_study": false,
+                    "is_price_study": false,
+                    "isCustomIndicator": true,
+                    "format": {
+                        "type": 'percent',
+                        "precision": 1,
+                    },
+                    "plots": [
+                        {"id": "plot_delta", "type": "line", "plottype": "histogram"},
+                        {
+                            "id": "plot_colorer",
+                            "type": "colorer",
+                            "plottype": "colorer",
+                            'target': 'plot_delta',
+                            'palette': 'paletteId1'
+                        }
+                    ],
+                    "palettes": {
+                        paletteId1: {
+                            colors: {
+                                0: {
+                                    name: 'Red',
+                                },
+                                1: {
+                                    name: 'Green',
+                                },
+                            },
+                        },
+                    },
+                    "defaults": {
+                        "styles": {
+                            "plot_delta": {
+                                'title': "Delta",
+                                "linestyle": 1,
+                                "visible": true,
+                                "trackPrice": false,
+                                "plottype": 5
+                            },
+                        },
+
+                        palettes: {
+                            paletteId1: {
+                                colors: {
+                                    0: {
+                                        color: '#ff0000',
+                                        width: 3,
+                                        style: 0,
+                                        transparency: 50,
+                                    },
+                                    1: {
+                                        color: '#4caf51',
+                                        width: 3,
+                                        style: 0,
+                                        transparency: 50,
+                                    },
+                                },
+                            },
+                        },
+                        // Precision of the study's output values
+                        // (quantity of digits after the decimal separator).
+                        "precision": 2,
+
+                        "inputs": {}
+                    },
+                    "styles": {},
+                    "inputs": {}
+                },
+                "constructor": function () {
+                    this.main = function (context, inputCallback) {
+                        const ppr_delta = window.ssiBuffers?.['ppr_delta']?.[context.symbol.time] * 100 ?? NaN;
+                        const colorIndex = ppr_delta > 0 ? 1 : 0;
+                        return [ppr_delta, colorIndex];
+                    }
+                }
+            }
+
+            const __interest_orders__ = {
+                name: "OpenInterest (Orders)",
+                metainfo: {
+                    "_metainfoVersion": 40,
+                    "id": "open-interest_orders@tv-basicstudies-1",
+                    "scriptIdPart": "",
+                    "name": "OpenInterest (Orders)",
+                    "description": "OpenInterest (Orders)",
+                    "shortDescription": "Open Interest (Orders)",
+                    "is_hidden_study": false,
+                    "is_price_study": false,
+                    "isCustomIndicator": true,
+                    "plots": [
+                        {"id": "plot_oio", "type": "line"},
+                    ],
+                    "defaults": {
+                        "styles": {
+                            "plot_oio": {
+                                'title': "Orders",
+                                "linestyle": 0,
+                                "visible": true,
+                                "linewidth": 2,
+                                "plottype": 'line',
+                                "trackPrice": false,
+                                "transparency": 10,
+                                "color": "#0382ea"
+                            },
+                        },
+                        "precision": 2,
+
+                        "inputs": {}
+                    },
+                    "styles": {
+                        "plot_oio": {
+                            "title": "OI Orders",
+                        },
+                    },
+                    "inputs": {}
+                },
+                "constructor": function () {
+                    this.main = function (context, inputCallback) {
+                        return [
+                            window.ssiBuffers?.['oio']?.[context.symbol.time] - 0 ?? NaN,
+                        ];
+                    }
+                }
+            }
+
+            const __interest_orders_delta__ = {
+                name: "OpenInterest (Orders,Delta)",
+                metainfo: {
+                    "_metainfoVersion": 40,
+                    "id": "open-interest-orders-delta@tv-basicstudies-1",
+                    "scriptIdPart": "",
+                    "name": "OpenInterest (Orders,Delta)",
+                    "description": "OpenInterest (Orders,Delta)",
+                    "shortDescription": "Open Interest (Orders,Delta)",
+                    "is_hidden_study": false,
+                    "is_price_study": false,
+                    "isCustomIndicator": true,
+                    "plots": [
+                        {"id": "plot_delta", "type": "line", "plottype": "histogram"},
+                        {
+                            "id": "plot_colorer",
+                            "type": "colorer",
+                            "plottype": "colorer",
+                            'target': 'plot_delta',
+                            'palette': 'paletteId1'
+                        }
+                    ],
+                    palettes: {
+                        paletteId1: {
+                            colors: {
+                                0: {
+                                    name: 'Red',
+                                },
+                                1: {
+                                    name: 'Green',
+                                },
+                            },
+                        },
+                    },
+                    "defaults": {
+                        "styles": {
+                            "plot_delta": {
+                                'title': "Delta",
+                                "linestyle": 1,
+                                "visible": true,
+                                "trackPrice": false,
+                                "transparency": 40,
+                                "plottype": 5
+                            },
+                        },
+                        palettes: {
+                            paletteId1: {
+                                colors: {
+                                    0: {
+                                        color: '#ff0000',
+                                        width: 3,
+                                        style: 0,
+                                        transparency: 50,
+                                    },
+                                    1: {
+                                        color: '#4caf51',
+                                        width: 3,
+                                        style: 0,
+                                        transparency: 50,
+                                    },
+                                },
+                            },
+                        },
+                        // Precision of the study's output values
+                        // (quantity of digits after the decimal separator).
+                        "precision": 2,
+
+                        "inputs": {}
+                    },
+                    "styles": {},
+                    "inputs": {}
+                },
+                "constructor": function () {
+                    this.main = function (context, inputCallback) {
+                        const oio_delta = window.ssiBuffers?.['oio_delta']?.[context.symbol.time] - 0 ?? NaN;
+                        const colorIndex = oio_delta > 0 ? 1 : 0;
+                        return [oio_delta, colorIndex];
+                    }
+                }
+            }
+
+            const __interest_positions__ = {
+                name: "OpenInterest (Positions)",
+                metainfo: {
+                    "_metainfoVersion": 40,
+                    "id": "open-interest_positionss@tv-basicstudies-1",
+                    "scriptIdPart": "",
+                    "name": "OpenInterest (Positions)",
+                    "description": "OpenInterest (Positions)",
+                    "shortDescription": "Open Interest (Positions)",
+                    "is_hidden_study": false,
+                    "is_price_study": false,
+                    "isCustomIndicator": true,
+                    "plots": [
+                        {"id": "plot_oip", "type": "line"},
+                    ],
+                    "defaults": {
+                        "styles": {
+                            "plot_oip": {
+                                'title': "Positions",
+                                "linestyle": 0,
+                                "visible": true,
+                                "linewidth": 2,
+                                "plottype": 'line',
+                                "trackPrice": true,
+                                "transparency": 10,
+                                "color": "#0382ea"
+                            },
+                        },
+
+                        // Precision of the study's output values
+                        // (quantity of digits after the decimal separator).
+                        "precision": 2,
+
+                        "inputs": {}
+                    },
+                    "styles": {
+                        "plot_oip": {
+                            "title": "OI Positions",
+                        },
+                    },
+                    "inputs": {}
+                },
+                "constructor": function () {
+                    this.main = function (context, inputCallback) {
+                        return [
+                            window.ssiBuffers?.['oip']?.[context.symbol.time] - 0 ?? NaN,
+                        ];
+                    }
+                }
+            }
+
+            const __interest_positions_delta__ = {
+                name: "OpenInterest (Positions,Delta)",
+                metainfo: {
+                    "_metainfoVersion": 40,
+                    "id": "open-interest-positions-delta@tv-basicstudies-1",
+                    "scriptIdPart": "",
+                    "name": "OpenInterest (Positions,Delta)",
+                    "description": "OpenInterest (Positions,Delta)",
+                    "shortDescription": "Open Interest (Positions,Delta)",
+                    "is_hidden_study": false,
+                    "is_price_study": false,
+                    "isCustomIndicator": true,
+                    "plots": [
+                        {"id": "plot_delta", "type": "line", "plottype": "histogram"},
+                        {
+                            "id": "plot_colorer",
+                            "type": "colorer",
+                            "plottype": "colorer",
+                            'target': 'plot_delta',
+                            'palette': 'paletteId1'
+                        }
+                    ],
+                    palettes: {
+                        paletteId1: {
+                            colors: {
+                                0: {
+                                    name: 'Red',
+                                },
+                                1: {
+                                    name: 'Green',
+                                },
+                            },
+                        },
+                    },
+                    "defaults": {
+                        "styles": {
+                            "plot_delta": {
+                                'title': "Delta",
+                                "linestyle": 1,
+                                "visible": true,
+                                "trackPrice": false,
+                                "plottype": 5
+                            },
+                        },
+                        palettes: {
+                            paletteId1: {
+                                colors: {
+                                    0: {
+                                        color: '#ff0000',
+                                        width: 3,
+                                        style: 0,
+                                        transparency: 50,
+                                    },
+                                    1: {
+                                        color: '#4caf51',
+                                        width: 3,
+                                        style: 0,
+                                        transparency: 50,
+                                    },
+                                },
+                            },
+                        },
+                        // Precision of the study's output values
+                        // (quantity of digits after the decimal separator).
+                        "precision": 2,
+
+                        "inputs": {}
+                    },
+                    "styles": {},
+                    "inputs": {}
+                },
+                "constructor": function () {
+                    this.main = function (context, inputCallback) {
+                        const oip_delta = window.ssiBuffers?.['oip_delta']?.[context.symbol.time] - 0 ?? NaN;
+                        const colorIndex = oip_delta > 0 ? 1 : 0;
+                        return [oip_delta, colorIndex];
+                    }
+                }
+            }
+
+            const __activity_increase__ = {
+                name: "TradingActivity (Increase)",
+                metainfo: {
+                    "_metainfoVersion": 40,
+                    "id": "trading-activityt-increase@tv-basicstudies-1",
+                    "scriptIdPart": "",
+                    "name": "TradingActivity (Increase)",
+                    "description": "TradingActivity (Increase)",
+                    "shortDescription": "Trading Activity (Increase)",
+                    "is_hidden_study": false,
+                    "is_price_study": false,
+                    "isCustomIndicator": true,
+                    "plots": [
+                        {"id": "plot_0", "type": "line"},
+                        {"id": "plot_1", "type": "line"},
+                        {"id": "plot_baseline", "type": "line"},
+                    ],
+                    "defaults": {
+                        "styles": {
+                            "plot_0": {
+                                'title': "+Buyers",
+                                "linestyle": 0,
+                                "visible": true,
+                                "linewidth": 1,
+                                "plottype": 0,
+                                "trackPrice": true,
+                                "transparency": 10,
+                                "color": "#01a7bc"
+                            },
+                            "plot_1": {
+                                'title': "+Sellers",
+                                "linestyle": 0,
+                                "visible": true,
+                                "linewidth": 1,
+                                "plottype": 0,
+                                "trackPrice": false,
+                                "transparency": 10,
+                                "color": "#fd8606"
+                            },
+                            "plot_baseline": {
+                                "linewidth": 0,
+                                "linestyle": 0,
+                                "visible": false,
+                                "transparency": 0,
+                                "isHidden": true,
+                                // display: 1,
+                                "color": '#ff0000', // color of the baseline
+                            },
+                        },
+
+                        // Precision of the study's output values
+                        // (quantity of digits after the decimal separator).
+                        "precision": 2,
+
+                        "inputs": {}
+                    },
+                    filledAreasStyle: {
+                        fill_0: {
+                            bottomColor: '#01a7bc', // ignored because replaced by palette colours
+                            topColor: '#01a7bc', // ignored because replaced by palette colours
+                            color: '#01a7bc', // ignored because replaced by palette colours
+                            // fillType: "gradient",
+                            bottomValue: 0,
+                            topValue: 50,
+                            transparency: 90,
+                            visible: true,
+                        },
+                        fill_1: {
+                            topColor: '#fd8606', // ignored because replaced by palette colours
+                            bottomColor: '#fd8606', // ignored because replaced by palette colours
+                            color: '#fd8606', // ignored because replaced by palette colours
+                            // fillType: "gradient",
+                            bottomValue: 0,
+                            topValue: 1,
+                            transparency: 90,
+                            visible: true,
+
+                        },
+                    },
+                    filledAreas: [
+                        {
+                            id: 'fill_0',
+                            objAId: 'plot_baseline',
+                            objBId: 'plot_0',
+                            type: 'plot_plot',
+                            title: 'Buyers Fill',
+                            fillToIntersection: true,
+                        },
+                        {
+                            id: 'fill_1',
+                            objAId: 'plot_baseline',
+                            objBId: 'plot_1',
+                            type: 'plot_plot',
+                            title: 'Sellers Fill',
+                            fillToIntersection: false,
+                        },
+                    ],
+                    "styles": {
+                        "plot_0": {
+                            "title": "+Buyers",
+                        },
+                        "plot_1": {
+                            "title": "+Sellers",
+                        },
+                        "plot_baseline": {
+                            "title": 'Baseline',
+                            "isHidden": true, // hides from options window
+                        },
+                    },
+                    "inputs": {}
+                },
+                "constructor": function () {
+                    this.main = function (context, inputCallback) {
+                        return [
+                            window.ssiBuffers?.['incb']?.[context.symbol.time] - 0 ?? NaN,
+                            window.ssiBuffers?.['incs']?.[context.symbol.time] - 0 ?? NaN,
+                            0
+                        ];
+                    }
+                }
+            }
+
+            const __activity_increase_delta__ = {
+                name: "TradingActivity (Increase,Delta)",
+                metainfo: {
+                    "_metainfoVersion": 40,
+                    "id": "trading-activityt-increase-delta@tv-basicstudies-1",
+                    "scriptIdPart": "",
+                    "name": "TradingActivity (Increase,Delta)",
+                    "description": "TradingActivity (Increase,Delta)",
+                    "shortDescription": "Trading Activity (Increase,Delta)",
+                    "is_hidden_study": false,
+                    "is_price_study": false,
+                    "isCustomIndicator": true,
+                    "plots": [
+                        {"id": "plot_delta", "type": "line", "plottype": "histogram"},
+                        {
+                            "id": "plot_colorer",
+                            "type": "colorer",
+                            "plottype": "colorer",
+                            'target': 'plot_delta',
+                            'palette': 'paletteId1'
+                        }
+                    ],
+                    palettes: {
+                        paletteId1: {
+                            colors: {
+                                0: {
+                                    name: 'Red',
+                                },
+                                1: {
+                                    name: 'Green',
+                                },
+                            },
+                        },
+                    },
+                    "defaults": {
+                        "styles": {
+                            "plot_delta": {
+                                'title': "Delta",
+                                "linestyle": 1,
+                                "visible": true,
+                                "trackPrice": false,
+                                "transparency": 50,
+                                "plottype": 5
+                            },
+                        },
+
+                        palettes: {
+                            paletteId1: {
+                                colors: {
+                                    0: {
+                                        color: '#ff0000',
+                                        width: 3,
+                                        style: 0,
+                                        transparency: 50,
+                                    },
+                                    1: {
+                                        color: '#4caf51',
+                                        width: 3,
+                                        style: 0,
+                                        transparency: 50,
+                                    },
+                                },
+                            },
+                        },
+                        // Precision of the study's output values
+                        // (quantity of digits after the decimal separator).
+                        "precision": 2,
+
+                        "inputs": {}
+                    },
+                    "styles": {},
+                    "inputs": {}
+                },
+                "constructor": function () {
+                    this.main = function (context, inputCallback) {
+                        const inc_delta = window.ssiBuffers?.['dinc']?.[context.symbol.time] - 0 ?? NaN;
+                        const colorIndex = inc_delta > 0 ? 1 : 0;
+                        return [inc_delta, colorIndex];
+                    }
+                }
+            }
+
+            const __activity_decrease__ = {
+                name: "TradingActivity (Decrease)",
+                metainfo: {
+                    "_metainfoVersion": 40,
+                    "id": "trading-activityt-decrease@tv-basicstudies-1",
+                    "scriptIdPart": "",
+                    "name": "TradingActivity (Decrease)",
+                    "description": "TradingActivity (Decrease)",
+                    "shortDescription": "Trading Activity (Decrease)",
+                    "is_hidden_study": false,
+                    "is_price_study": false,
+                    "isCustomIndicator": true,
+                    "plots": [
+                        {"id": "plot_0", "type": "line"},
+                        {"id": "plot_1", "type": "line"},
+                        {"id": "plot_baseline", "type": "line"},
+                    ],
+                    "defaults": {
+                        "styles": {
+                            "plot_0": {
+                                'title': "-Buyers",
+                                "linestyle": 0,
+                                "visible": true,
+                                "linewidth": 1,
+                                "plottype": 0,
+                                "trackPrice": true,
+                                "transparency": 10,
+                                "color": "#01a7bc"
+                            },
+                            "plot_1": {
+                                'title': "-Sellers",
+                                "linestyle": 0,
+                                "visible": true,
+                                "linewidth": 1,
+                                "plottype": 0,
+                                "trackPrice": true,
+                                "transparency": 10,
+                                "color": "#fd8606"
+                            },
+                            "plot_baseline": {
+                                "linewidth": 0,
+                                "linestyle": 0,
+                                "visible": false,
+                                "transparency": 0,
+                                "isHidden": true,
+                                // display: 1,
+                                "color": '#ff0000', // color of the baseline
+                            },
+                        },
+
+                        // Precision of the study's output values
+                        // (quantity of digits after the decimal separator).
+                        "precision": 2,
+
+                        "inputs": {}
+                    },
+                    filledAreasStyle: {
+                        fill_0: {
+                            bottomColor: '#01a7bc', // ignored because replaced by palette colours
+                            topColor: '#01a7bc', // ignored because replaced by palette colours
+                            color: '#01a7bc', // ignored because replaced by palette colours
+                            // fillType: "gradient",
+                            bottomValue: 0,
+                            topValue: 1,
+                            transparency: 90,
+                            visible: true,
+                        },
+                        fill_1: {
+                            topColor: '#fd8606', // ignored because replaced by palette colours
+                            bottomColor: '#fd8606', // ignored because replaced by palette colours
+                            color: '#fd8606', // ignored because replaced by palette colours
+                            // fillType: "gradient",
+                            bottomValue: 0,
+                            topValue: 1,
+                            transparency: 90,
+                            visible: true,
+
+                        },
+                    },
+                    filledAreas: [
+                        {
+                            id: 'fill_0',
+                            objAId: 'plot_baseline',
+                            objBId: 'plot_0',
+                            type: 'plot_plot',
+                            title: 'Buyers Fill',
+                            fillToIntersection: true,
+                        },
+                        {
+                            id: 'fill_1',
+                            objAId: 'plot_baseline',
+                            objBId: 'plot_1',
+                            type: 'plot_plot',
+                            title: 'Sellers Fill',
+                            fillToIntersection: false,
+                        },
+                    ],
+                    "styles": {
+                        "plot_0": {
+                            "title": "-Buyers",
+                        },
+                        "plot_1": {
+                            "title": "-Sellers",
+                        },
+                        "plot_baseline": {
+                            "title": 'Baseline',
+                            "isHidden": true, // hides from options window
+                        },
+                    },
+                    "inputs": {}
+                },
+                "constructor": function () {
+                    this.main = function (context, inputCallback) {
+                        return [
+                            window.ssiBuffers?.['decb']?.[context.symbol.time] - 0 ?? NaN,
+                            window.ssiBuffers?.['decs']?.[context.symbol.time] - 0 ?? NaN,
+                            0
+                        ];
+                    }
+                }
+            }
+
+            const __activity_decrease_delta__ = {
+                name: "TradingActivity (Decrease,Delta)",
+                metainfo: {
+                    "_metainfoVersion": 40,
+                    "id": "trading-activityt-decrease-delta@tv-basicstudies-1",
+                    "scriptIdPart": "",
+                    "name": "TradingActivity (Decrease,Delta)",
+                    "description": "TradingActivity (Decrease,Delta)",
+                    "shortDescription": "Trading Activity (Decrease,Delta)",
+                    "is_hidden_study": false,
+                    "is_price_study": false,
+                    "isCustomIndicator": true,
+                    "plots": [
+                        {"id": "plot_delta", "type": "line", "plottype": "histogram"},
+                        {
+                            "id": "plot_colorer",
+                            "type": "colorer",
+                            "plottype": "colorer",
+                            'target': 'plot_delta',
+                            'palette': 'paletteId1'
+                        }
+                    ],
+                    palettes: {
+                        paletteId1: {
+                            colors: {
+                                0: {
+                                    name: 'Red',
+                                },
+                                1: {
+                                    name: 'Green',
+                                },
+                            },
+                        },
+                    },
+                    "defaults": {
+                        "styles": {
+                            "plot_delta": {
+                                'title': "Delta",
+                                "linestyle": 1,
+                                "visible": true,
+                                "trackPrice": false,
+                                "transparency": 50,
+                                "plottype": 5
+                            },
+                        },
+
+                        palettes: {
+                            paletteId1: {
+                                colors: {
+                                    0: {
+                                        color: '#ff0000',
+                                        width: 3,
+                                        style: 0,
+                                        transparency: 50,
+                                    },
+                                    1: {
+                                        color: '#4caf51',
+                                        width: 3,
+                                        style: 0,
+                                        transparency: 50,
+                                    },
+                                },
+                            },
+                        },
+                        // Precision of the study's output values
+                        // (quantity of digits after the decimal separator).
+                        "precision": 2,
+
+                        "inputs": {}
+                    },
+                    "styles": {},
+                    "inputs": {}
+                },
+                "constructor": function () {
+                    this.main = function (context, inputCallback) {
+                        const dec_delta = window.ssiBuffers?.['ddec']?.[context.symbol.time] - 0 ?? NaN;
+                        const colorIndex = dec_delta > 0 ? 1 : 0;
+                        return [dec_delta, colorIndex];
+                    }
+                }
+            }
+
+            const __ratios__ = {
+                name: "Ratios",
+                metainfo: {
+                    "_metainfoVersion": 40,
+                    "id": "ratios@tv-basicstudies-1",
+                    "scriptIdPart": "",
+                    "name": "Ratios",
+                    "description": "Ratios",
+                    "shortDescription": "Ratios",
+                    "is_hidden_study": false,
+                    "is_price_study": false,
+                    "isCustomIndicator": true,
+                    "plots": [
+                        {"id": "plot_avg", "type": "line"},
+                        {"id": "plot_blue", "type": "line"},
+                        {"id": "plot_duka", "type": "line"},
+                        {"id": "plot_fibo", "type": "line"},
+                        {"id": "plot_oan", "type": "line"},
+                        {"id": "plot_inst", "type": "line"},
+                        {"id": "plot_myfx", "type": "line"},
+                        {"id": "plot_igg", "type": "line"},
+                        {"id": "plot_ssi", "type": "line"},
+                        {"id": "plot_xm", "type": "line"},
+                        {"id": "plot_amar", "type": "line"},
+                    ],
+                    "defaults": {
+                        "styles": {
+                            "plot_avg": {
+                                'title': "Average",
+                                "linestyle": 0,
+                                "visible": true,
+                                "linewidth": 1,
+                                "plottype": 'line',
+                                "trackPrice": false,
+                                "transparency": 10,
+                                "color": "#2f2d2e"
+                            },
+                            "plot_blue": {
+                                'title': "FXBlue",
+                                "linestyle": 0,
+                                "visible": true,
+                                "linewidth": 1,
+                                "plottype": 'line',
+                                "trackPrice": false,
+                                "transparency": 10,
+                                "color": "#cc0100"
+                            },
+                            "plot_duka": {
+                                'title': "DukasCopy",
+                                "linestyle": 0,
+                                "visible": false,
+                                "linewidth": 1,
+                                "plottype": 'line',
+                                "trackPrice": false,
+                                "transparency": 10,
+                                "color": "#ff4343"
+                            },
+                            "plot_fibo": {
+                                'title': "Fibo",
+                                "linestyle": 0,
+                                "visible": false,
+                                "linewidth": 1,
+                                "plottype": 'line',
+                                "trackPrice": false,
+                                "transparency": 10,
+                                "color": "#22E057"
+                            },
+                            "plot_oan": {
+                                'title': "Oan",
+                                "linestyle": 0,
+                                "visible": true,
+                                "linewidth": 1,
+                                "plottype": 'line',
+                                "trackPrice": false,
+                                "transparency": 10,
+                                "color": "#00aec8"
+                            },
+                            "plot_inst": {
+                                'title': "InstaForex",
+                                "linestyle": 0,
+                                "visible": false,
+                                "linewidth": 1,
+                                "plottype": 'line',
+                                "trackPrice": false,
+                                "transparency": 10,
+                                "color": "#bd43bc"
+                            },
+                            "plot_myfx": {
+                                'title': "MyFXBook",
+                                "linestyle": 0,
+                                "visible": true,
+                                "linewidth": 1,
+                                "plottype": 'line',
+                                "trackPrice": false,
+                                "transparency": 10,
+                                "color": "#ff8a00"
+                            },
+                            "plot_igg": {
+                                'title': "IGG",
+                                "linestyle": 0,
+                                "visible": false,
+                                "linewidth": 1,
+                                "plottype": 'line',
+                                "trackPrice": false,
+                                "transparency": 10,
+                                "color": "#0d71cf"
+                            },
+                            "plot_ssi": {
+                                'title': "FXSSI",
+                                "linestyle": 0,
+                                "visible": true,
+                                "linewidth": 1,
+                                "plottype": 'line',
+                                "trackPrice": false,
+                                "transparency": 10,
+                                "color": "#F25792"
+                            },
+                            "plot_xm": {
+                                'title': "XM",
+                                "linestyle": 0,
+                                "visible": true,
+                                "linewidth": 1,
+                                "plottype": 'line',
+                                "trackPrice": false,
+                                "transparency": 10,
+                                "color": "#5170aa"
+                            },
+                            "plot_amar": {
+                                'title': "AMarkets",
+                                "linestyle": 0,
+                                "visible": true,
+                                "linewidth": 1,
+                                "plottype": 'line',
+                                "trackPrice": false,
+                                "transparency": 10,
+                                "color": "#aaaa01"
+                            },
+                        },
+
+                        // Precision of the study's output values
+                        // (quantity of digits after the decimal separator).
+                        "precision": 2,
+
+                        "inputs": {}
+                    },
+                    "styles": {},
+                    "inputs": {}
+                },
+                "constructor": function () {
+                    this.main = function (context, inputCallback) {
+                        return [
+                            window.ssiBuffers?.['average']?.[context.symbol.time] - 0 ??NaN,
+                            window.ssiBuffers?.['fxblue']?.[context.symbol.time] - 0 ??NaN,
+                            window.ssiBuffers?.['dukscopy']?.[context.symbol.time] - 0 ??NaN,
+                            window.ssiBuffers?.['fiboforx']?.[context.symbol.time] - 0 ??NaN,
+                            window.ssiBuffers?.['ftroanda']?.[context.symbol.time] - 0 ??NaN,
+                            window.ssiBuffers?.['instfor']?.[context.symbol.time] - 0 ??NaN,
+                            window.ssiBuffers?.['myfxbook']?.[context.symbol.time] - 0 ??NaN,
+                            window.ssiBuffers?.['fxcm']?.[context.symbol.time] - 0 ??NaN,
+                            window.ssiBuffers?.['ssi']?.[context.symbol.time] - 0 ??NaN,
+                            window.ssiBuffers?.['xm']?.[context.symbol.time] - 0 ??NaN,
+                            window.ssiBuffers?.['amarkets']?.[context.symbol.time] - 0 ??NaN,
+                        ];
+                    }
+                }
+            }
+
+            const __derivatives__ = {
+                name: "Ratios",
+                metainfo: {
+                    "_metainfoVersion": 40,
+                    "id": "derivatives@tv-basicstudies-1",
+                    "scriptIdPart": "",
+                    "name": "Derivatives",
+                    "description": "Derivatives",
+                    "shortDescription": "Derivatives",
+                    "is_hidden_study": false,
+                    "is_price_study": true,
+                    "isCustomIndicator": true,
+                    "plots": [
+                        {"id": "plot_mvo", "type": "line"},
+                        {"id": "plot_mvp", "type": "line"},
+                        {"id": "plot_ob", "type": "line"},
+                        {"id": "plot_os", "type": "line"},
+                        {"id": "plot_sr", "type": "line"},
+                        {"id": "plot_rp", "type": "line"},
+                        {"id": "plot_pra", "type": "line"},
+                        {"id": "plot_prb", "type": "line"}
+
+                    ],
+                    "defaults": {
+                        "styles": {
+                            "plot_mvo": {
+                                'title': "MVO",
+                                "linestyle": 0,
+                                "visible": false,
+                                "linewidth": 3,
+                                "plottype": 'line',
+                                "trackPrice": false,
+                                "transparency": 10,
+                                "color": "#8bca05"
+                            },
+                            "plot_mvp": {
+                                'title': "MVP",
+                                "linestyle": 0,
+                                "visible": true,
+                                "linewidth": 2,
+                                "plottype": 'line',
+                                "trackPrice": false,
+                                "transparency": 10,
+                                "color": "#288fe7"
+                            },
+                            "plot_ob": {
+                                'title': "Overbought",
+                                "linestyle": 0,
+                                "visible": false,
+                                "linewidth": 2,
+                                "plottype": 'line',
+                                "trackPrice": false,
+                                "transparency": 10,
+                                "color": "#2bc96e"
+                            },
+                            "plot_os": {
+                                'title': "Oversold",
+                                "linestyle": 0,
+                                "visible": false,
+                                "linewidth": 2,
+                                "plottype": 'line',
+                                "trackPrice": false,
+                                "transparency": 10,
+                                "color": "#e76056"
+                            },
+                            "plot_sr": {
+                                'title': "Support / Resistance",
+                                "linestyle": 0,
+                                "visible": false,
+                                "linewidth": 2,
+                                "plottype": 'line',
+                                "trackPrice": false,
+                                "transparency": 10,
+                                "color": "#f48311"
+                            },
+                            "plot_rp": {
+                                'title': "Return Point",
+                                "linestyle": 0,
+                                "visible": false,
+                                "linewidth": 2,
+                                "plottype": 'line',
+                                "trackPrice": false,
+                                "transparency": 10,
+                                "color": "#c766f9"
+                            },
+                            "plot_pra": {
+                                'title': "Potential Reversal Point Above",
+                                "linestyle": 0,
+                                "visible": false,
+                                "linewidth": 2,
+                                "plottype": 'line',
+                                "trackPrice": false,
+                                "transparency": 10,
+                                "color": "#c1b930"
+                            },
+                            "plot_prb": {
+                                'title': "Potential Reversal Point Below",
+                                "linestyle": 0,
+                                "visible": false,
+                                "linewidth": 2,
+                                "plottype": 'line',
+                                "trackPrice": false,
+                                "transparency": 10,
+                                "color": "#c1b930"
+                            },
+                        },
+
+                        // Precision of the study's output values
+                        // (quantity of digits after the decimal separator).
+                        "precision": 2,
+
+                        "inputs": {}
+                    },
+                    "styles": {
+                        "plot_mvo": {
+                            'title': "MVO",
+                            "linestyle": 0,
+                            "visible": true,
+                            "linewidth": 3,
+                            "plottype": 'line',
+                            "trackPrice": true,
+                            "transparency": 10,
+                            "color": "#8bca05"
+                        },
+                        "plot_mvp": {
+                            'title': "MVP",
+                            "linestyle": 0,
+                            "visible": true,
+                            "linewidth": 2,
+                            "plottype": 'line',
+                            "trackPrice": false,
+                            "transparency": 10,
+                            "color": "#288fe7"
+                        },
+                        "plot_ob": {
+                            'title': "Overbought",
+                            "linestyle": 0,
+                            "visible": true,
+                            "linewidth": 2,
+                            "plottype": 'line',
+                            "trackPrice": false,
+                            "transparency": 10,
+                            "color": "#2bc96e"
+                        },
+                        "plot_os": {
+                            'title': "Oversold",
+                            "linestyle": 0,
+                            "visible": true,
+                            "linewidth": 2,
+                            "plottype": 'line',
+                            "trackPrice": false,
+                            "transparency": 10,
+                            "color": "#e76056"
+                        },
+                        "plot_sr": {
+                            'title': "Support / Resistance",
+                            "linestyle": 0,
+                            "visible": true,
+                            "linewidth": 2,
+                            "plottype": 'line',
+                            "trackPrice": false,
+                            "transparency": 10,
+                            "color": "#f48311"
+                        },
+                        "plot_rp": {
+                            'title': "Return Point",
+                            "linestyle": 0,
+                            "visible": true,
+                            "linewidth": 2,
+                            "plottype": 'line',
+                            "trackPrice": false,
+                            "transparency": 10,
+                            "color": "#c766f9"
+                        },
+                        "plot_pra": {
+                            'title': "Potential Reversal Point Above",
+                            "linestyle": 0,
+                            "visible": true,
+                            "linewidth": 2,
+                            "plottype": 'line',
+                            "trackPrice": false,
+                            "transparency": 10,
+                            "color": "#c1b930"
+                        },
+                        "plot_prb": {
+                            'title': "Potential Reversal Point Below",
+                            "linestyle": 0,
+                            "visible": true,
+                            "linewidth": 2,
+                            "plottype": 'line',
+                            "trackPrice": false,
+                            "transparency": 10,
+                            "color": "#c1b930"
+                        },
+                    },
+
+                    "inputs": {}
+                },
+                "constructor": function () {
+                    this.main = function (context, inputCallback) {
+                        this._context = context;
+                        this._input = inputCallback;
+
+                        // console.log(context);
+                        return [
+                            window.ssiBuffers?.['mvo']?.[context.symbol.time] - 0,
+                            window.ssiBuffers?.['mvp']?.[context.symbol.time] - 0,
+                            window.ssiBuffers?.['ob']?.[context.symbol.time] - 0,
+                            window.ssiBuffers?.['os']?.[context.symbol.time] - 0,
+                            window.ssiBuffers?.['sr']?.[context.symbol.time] - 0,
+                            window.ssiBuffers?.['gr']?.[context.symbol.time] - 0,
+                            window.ssiBuffers?.['prpa']?.[context.symbol.time] - 0,
+                            window.ssiBuffers?.['prpb']?.[context.symbol.time] - 0,
+                        ];
+                    }
+                }
             }
 
             window.user = {
