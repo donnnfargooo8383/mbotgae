@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-    <title>Retnet Tools </title>
+    <title>&cugdeh Tools </title>
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
     <script type="text/javascript" src="./charting_library.standalone.js"></script>
     <script type="text/javascript" src="./bundle.js"></script>
@@ -1745,52 +1745,6 @@
                 const chart = widget.chart();
                 let map = null;
 
-                function adjustHeatmap() {
-                    if (!map) return;
-                    // const xRatio = paneWidth / (timeTo - timeFrom);
-                    const scale = chart.getTimeScale();
-                    map.style.display = 'none';
-                    if (!widget.heatmap[symbol]) return;
-                    map.style.display = 'block';
-                    // mapTimes = widget.heatmap[symbol].times ?? null;
-                    // mapPrices = widget.heatmap[symbol].prices ?? null;
-                    // step = widget.heatmap[symbol].step ?? null;
-                    // if (!mapTimes || !mapPrices.length || !step) return;
-                    // console.log(mapTimes, mapPrices, step);
-
-                    // debugger;
-                    const yRatio = paneHeight / (priceTo - priceFrom);
-                    // console.log(width);
-                    // console.log(scale.rightOffset());
-                    // mapTime
-
-
-                    const mapWidth = widget.heatmap[symbol]['image-resolution'][0] * widget.heatmap[symbol]['resolution']; // in time
-                    const mapHeight = widget.heatmap[symbol]['image-resolution'][1] * widget.heatmap[symbol]['step']; // in price
-
-                    let lastBar = chart?.getSeries()?.data()?.m_bars?._end;
-                    if (lastBar > 0) {
-                        let lastBarTime = chart.getSeries().data().m_bars._items[lastBar - 1].timeMs / 1000;
-                        const timeDiff = (lastBarTime - widget.heatmap[symbol]['times'][1]);
-
-                        // timeDiff
-                        // console.log(());
-
-                        // let top = price2PaneTop(bucket.price);
-                        map.style.width = mapWidth * xRatio + "px";
-                        // console.log((timeTo - timeFrom) / 60 / 24, "hours");
-                        map.style.height = mapHeight * yRatio + "px";
-                        map.style.right = (scale.rightOffset() * scale.barSpacing()) + timeDiff * xRatio + 'px';
-                        // console.log(timeDiff * xRatio);
-
-                        // TODO this step if for pretty look
-                        map.style.top = (priceTo - widget.heatmap[symbol]['prices'][1] - widget.heatmap[symbol]['step']) * yRatio + "px";
-                    }
-                    // book.style.height = (y1 - y2) + "px";
-                    // debugger;
-                }
-
-                
                 function createHeatMap() {
                     const symbol = chart.symbol();
                     const mapElement = document.getElementById(widget._id)?.contentWindow?.document?.getElementById('slc');
@@ -1825,7 +1779,6 @@
                     
                     // Ambil heatmap dari GitHub
                     // map.src = `${BASE_URL}/data/heatmap/${symbol}.png?t=${Date.now()}`;
-                    adjustHeatmap();
                     return true;
                 }
 
