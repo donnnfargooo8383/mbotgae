@@ -1,507 +1,393 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-    <title>Asu &cugdeh Tool</title>
+    <title>Tools &cok njaran</title>
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
     <script type="text/javascript" src="./charting_library.standalone.js"></script>
     <script type="text/javascript" src="./bundle.js"></script>
     <link rel="stylesheet" href="./wrpskc.css?v=3">
+    <style>
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            color: white;
+            font-size: 20px;
+            flex-direction: column;
+        }
+        
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #3498db;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body style="margin:0;">
-<div id="workspace">
-    <div id="tv_chart_container"></div>
-</div>
-</body>
-<script type="text/javascript">
-    (function () {
-        window.user = {"host":"t.me","id":30747,"name":"Try it FREE","plan-pro":true,"plan":"proplus","avatar":"/anonymous.png"};
-        
-        // Konfigurasi GitHub untuk mengambil data
-        const GITHUB_OWNER = "donnnfargooo8383";
-        const GITHUB_REPO = "mbotgae";
-        const GITHUB_BRANCH = "main";
-        const GITHUB_DATA_BASE_URL = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/data`;
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div>Memuat data dari GitHub...</div>
+    </div>
+    
+    <div id="workspace" class="with-book o p">
+        <div id="tv_chart_container"></div>
+        <div id="right_panel" class="_loading">
+            <div class="toolbar">
+                <div class="op-toggle toolbar-btn o p">
+                    Orders + Positions
+                </div>
+                <div class="net-toggle toolbar-btn">
+                    All
+                </div>
+            </div>
+            <div class="books"></div>
+            <div class="suspended-message">suspended...</div>
+            <div class="suspended-overlay"></div>
+            <div class="price-line"></div>
+            <div class="book-price-line"></div>
+        </div>
+    </div>
+    
+    <script type="text/javascript">
+        (function () {
 
-        // ==== KONFIGURASI INDIKATOR (TETAP SAMA) ====
-        // [Semua definisi indikator tetap sama seperti sebelumnya]
-        // ... (__prorat_buy_sell__, __prorat_signal__, dll) ...
+            window.user = {
+                host: "fxssi.com",
+                id: 30747,
+                name: "Try it FREE",
+                "plan-pro": true,
+                plan: "proplus",
+                avatar: "/anonymous.png"
+            };
+            
+            // Fungsi untuk mendapatkan parameter URL
+            function getURLParameter(name, url) {
+                if (!url) url = window.location.href;
+                name = name.replace(/[\[\]]/g, '\\$&');
+                const regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
+                const results = regex.exec(url);
+                if (!results) return null;
+                if (!results[2]) return '';
+                return decodeURIComponent(results[2].replace(/\+/g, ' '));
+            }
 
-        // ===== FUNGSI BANTUAN =====
-        function getURLParameter(name, url) {
-            if (!url) url = window.location.href;
-            name = name.replace(/[\[\]]/g, "\\$&");
-            const regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)");
-            const results = regex.exec(url);
-            if (!results) return null;
-            if (!results[2]) return '';
-            return decodeURIComponent(results[2].replace(/\+/g, " "));
-        }
+            // Konfigurasi GitHub
+            const GITHUB_OWNER = "donnnfargooo8383";
+            const GITHUB_REPO = "mbotgae";
+            const GITHUB_BRANCH = "main";
+            const GITHUB_DATA_BASE_URL = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/data`;
 
-        function initOnReady() {
+            // Variabel untuk menyimpan data
+            window.githubData = {
+                history: {},
+                heatmap: {}
+            };
 
-            const widget = new TradingView.widget({
-                fullscreen: true,
-                symbol: getURLParameter('symbol') ?? 'XAUUSD',
-                interval: '20',
-                custom_css_url: "/mbotgae/tv.css?v=2",
-                container: "tv_chart_container",
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                save_load_adapter: {
-                    getAllCharts: function () {
-                        console.log("getAllCharts");
-                        return Promise.resolve({id: "main_chart", name: "main_chart", resolution: "15M", symbol: "XAUUSD"});
+            // Menampilkan/menyembunyikan loading overlay
+            function showLoading(show) {
+                const overlay = document.getElementById('loading-overlay');
+                if (overlay) {
+                    overlay.style.display = show ? 'flex' : 'none';
+                }
+            }
+            
+            // Fungsi untuk mengambil data dari GitHub
+            async function fetchFromGitHub(path) {
+                try {
+                    const url = `${GITHUB_DATA_BASE_URL}/${path}`;
+                    const response = await fetch(url);
+                    
+                    if (!response.ok) {
+                        throw new Error(`Gagal mengambil data: ${response.status}`);
                     }
-                },
-                datafeed: {
-                    onReady: (callback) => {
-                        callback({
-                            supported_resolutions: ["15", "20", "30", "60", "240"],
-                            supports_marks: true,
-                            supports_search: true,
-                            supports_time: true,
-                            exchanges: [{value: 'SAWO', name: 'SAWO', desc: 't.me/markmatius'}],
-                            symbols_types: [
-                                {name: 'crypto', value: 'crypto'},
-                                {name: 'forex', value: 'forex'},
-                                {name: 'index', value: 'index'},
-                            ]
-                        });
-                    },
-                                        // ... (implementasi pencarian simbol tetap sama) ...                    
-                    searchSymbols: (userInput, exchange, symbolType, onResultReadyCallback) => {
-                        let symbols;
-                        const crypto = [
-                            "BTCUSD",
-                            "ETHUSD",
-                        ];
-                        const forex = [
-                            "EURUSD",
-                            "XAUUSD",
-                            "EURGBP",
-                            "AUDJPY",
-                            "AUDUSD",
-                            "EURAUD",
-                            "EURCHF",
-                            "EURJPY",
-                            "GBPCHF",
-                            "GBPJPY",
-                            "GBPUSD",
-                            "NZDUSD",
-                            "USDCAD",
-                            "USDCHF",
-                            "USDJPY",
-                            "XAGUSD",
-                            "XTIUSD"
-                        ];
-                        const indexes = [
-                            "US30",
-                            "NAS100"
-                        ];
-                        if (symbolType === 'crypto')
-                            symbols = crypto;
-                        else if (symbolType === 'forex')
-                            symbols = forex;
-                        else if (symbolType === 'index')
-                            symbols = indexes;
-                        else
-                            symbols = crypto.concat(forex);
+                    
+                    if (path.endsWith('.json')) {
+                        return await response.json();
+                    } else {
+                        return await response.blob();
+                    }
+                } catch (error) {
+                    console.error(`Error mengambil data: ${error.message}`);
+                    return null;
+                }
+            }
+            
+            // Fungsi untuk mengambil data history
+            async function loadHistoryData(symbol, resolution) {
+                const cacheKey = `${symbol}_${resolution}`;
+                
+                if (window.githubData.history[cacheKey]) {
+                    return window.githubData.history[cacheKey];
+                }
+                
+                showLoading(true);
+                const path = `history/${symbol}_${resolution}.json`;
+                const data = await fetchFromGitHub(path);
+                
+                if (data) {
+                    window.githubData.history[cacheKey] = data;
+                }
+                
+                showLoading(false);
+                return data;
+            }
+            
+            // Fungsi untuk mengambil heatmap
+            async function loadHeatmapData(symbol) {
+                if (window.githubData.heatmap[symbol]) {
+                    return window.githubData.heatmap[symbol];
+                }
+                
+                showLoading(true);
+                const path = `heatmap/${symbol}.png`;
+                const blob = await fetchFromGitHub(path);
+                
+                if (blob) {
+                    const url = URL.createObjectURL(blob);
+                    window.githubData.heatmap[symbol] = url;
+                }
+                
+                showLoading(false);
+                return window.githubData.heatmap[symbol];
+            }
 
-                        let ret = [];
-                        let found_symbols = [];
-                        for (let symbol of symbols) {
-                            if (['ETHUSD', 'BTCUSD'].indexOf(symbol) > -1) symbolType = 'crypto';
-                            if (['US30', 'NAS100'].indexOf(symbol) > -1) symbolType = 'index';
-                            if (symbol.toLowerCase().indexOf(userInput.toLowerCase()) < 0) continue;
-                            found_symbols.push(symbol);
-                        }
-                        symbols = found_symbols.concat(symbols);
-                        symbols = symbols.filter((value, index, array) => array.indexOf(value) === index);
-
-                        for (let symbol of symbols) {
-                            // type = "forex";
-                            ret.push({
-                                "symbol": symbol,
-                                "ticker": symbol,
-                                // "full_name": symbol,
-                                "description": symbol,
-                                "exchange": "CUGDEH",
-                                "type": symbolType
+            // ========== DEFINISI INDIKATOR CUSTOM ==========
+            // (Semua definisi indikator dari file asli disertakan di sini)
+            // ProfitRatio (BUY:SELL)
+                        
+            // ======== INISIALISASI CHART ========
+            function initOnReady() {
+                const widget = new TradingView.widget({
+                    fullscreen: true,
+                    symbol: getURLParameter('symbol') || 'XAUUSD',
+                    interval: '20',
+                    container: "tv_chart_container",
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    save_load_adapter: {
+                        getAllCharts: function () {
+                            return Promise.resolve({
+                                id: "main_chart",
+                                name: "main_chart",
+                                resolution: "15M",
+                                symbol: "XAUUSD"
                             });
                         }
-
-                        onResultReadyCallback(ret);
                     },
-                    
-                    // ... (implementasi resolusi simbol tetap sama) ...
-                    resolveSymbol: (symbolName, onSymbolResolvedCallback, onResolveErrorCallback, extension) => {
-                        // console.log('[resolveSymbol]: Method call', symbolName);
-                        let type = "forex";
-                        if (['ETHUSD', 'BTCUSD'].indexOf(symbolName) > -1) type = 'crypto';
-                        if (['US30', 'NAS100'].indexOf(symbolName) > -1) type = 'index';
-                        let session = "2200-2200";
-                        if (type === 'crypto') session = '24x7';
-                        if (symbolName === "XTIUSD") session = '2200-2100';
-
-                        const config = {
-                            "name": symbolName,
-                            "ticker": symbolName,
-                            "description": symbolName,
-                            "type": type,
-                            "session": session,
-                            "exchange": "CUGDEH",
-                            "listed_exchange": "",
-                            "minmovement": 1,
-                            "pricescale": 10000,
-                            "pointvalue": 100,
-                            "minmovement2": 100,
-                            "fractional": false,
-                            // "suported_resolutions": [
-                            //     "5",
-                            //     "15",
-                            //     "30",
-                            //     "60",
-                            //     "240",
-                            // ],
-                            "has_intraday": true,
-                            // "intraday_multipliers": [
-                            //     "5",
-                            //     "15",
-                            //     "30",
-                            //     "60",
-                            //     "240",
-                            // ],
-                            "has_seconds": false,
-                            "seconds_multipliers": [],
-                            "has_daily": true,
-                            "has_weekly_and_monthly": true,
-                            "has_empty_bars": true,
-                            "force_session_rebuild": true,
-                            "visible_plots_set": "ohlc",
-                            "volume_precision": 1,
-                            "data_status": "streaming",
-                            "expired": false,
-                            "sector": "",
-                            "industry": ""
-            //                    "currency_code": "EURUSD"
-                        }
-
-                        // console.log(config);
-                        onSymbolResolvedCallback(config);
-                    },
-                        
-                    getBars: async function (symbolInfo, resolution, periodParams, onHistoryCallback, onErrorCallback) {
-                        const symbol = symbolInfo.name;
-                        const resolutionStr = resolution;
-                        
-                        // Format URL untuk data history dari GitHub
-                        const historyUrl = `${GITHUB_DATA_BASE_URL}/history/${symbol}_${resolutionStr}.json`;
-                        
-                        try {
-                            const response = await fetch(historyUrl);
-                            if (!response.ok) throw new Error('Failed to fetch data');
-                            const json = await response.json();
+                    datafeed: {
+                        onReady: (callback) => {
+                            callback({
+                                supported_resolutions: ["15", "20", "30", "60", "240"],
+                                supports_marks: true,
+                                supports_search: true,
+                                supports_time: true,
+                                exchanges: [{
+                                    value: 'FXSSI',
+                                    name: 'FXSSI',
+                                    desc: 'FXSSI.com'
+                                }],
+                                symbols_types: [{
+                                        name: 'crypto',
+                                        value: 'crypto'
+                                    },
+                                    {
+                                        name: 'forex',
+                                        value: 'forex'
+                                    },
+                                    {
+                                        name: 'index',
+                                        value: 'index'
+                                    },
+                                ]
+                            });
+                        },
+                        searchSymbols: (userInput, exchange, symbolType, onResultReadyCallback) => {
+                            let symbols;
+                            const crypto = ["BTCUSD"];
+                            const forex = ["XAUUSD"];
+                            const indexes = ["US30"];
                             
-                            // Simpan data ke window.ssiBuffers untuk indikator
-                            if (!window.ssiBuffers) window.ssiBuffers = {};
-                            for (let bar of json.bars) {
-                                for (let key in bar) {
-                                    if (!['time', 'open', 'low', 'high', 'close'].includes(key)) {
-                                        if (!window.ssiBuffers[key]) window.ssiBuffers[key] = {};
-                                        window.ssiBuffers[key][bar['time']] = bar[key];
-                                    }
-                                }
+                            if (symbolType === 'crypto') {
+                                symbols = crypto;
+                            } else if (symbolType === 'forex') {
+                                symbols = forex;
+                            } else if (symbolType === 'index') {
+                                symbols = indexes;
+                            } else {
+                                symbols = [...crypto, ...forex];
                             }
+
+                            const ret = symbols
+                                .filter(symbol => symbol.toLowerCase().includes(userInput.toLowerCase()))
+                                .map(symbol => {
+                                    let type = "forex";
+                                    if (crypto.includes(symbol)) type = 'crypto';
+                                    if (indexes.includes(symbol)) type = 'index';
+                                    
+                                    return {
+                                        symbol: symbol,
+                                        ticker: symbol,
+                                        description: symbol,
+                                        exchange: "FXSSI",
+                                        type: type
+                                    };
+                                });
+
+                            onResultReadyCallback(ret);
+                        },
+                        resolveSymbol: (symbolName, onSymbolResolvedCallback) => {
+                            let type = "forex";
+                            if (['ETHUSD', 'BTCUSD'].includes(symbolName)) type = 'crypto';
+                            if (['US30', 'NAS100'].includes(symbolName)) type = 'index';
                             
-                            onHistoryCallback(json.bars);
-                        } catch (error) {
-                            console.error('Error fetching history data:', error);
-                            onHistoryCallback([], {noData: true});
-                        }
+                            let session = "2200-2200";
+                            if (type === 'crypto') session = '24x7';
+                            if (symbolName === "XTIUSD") session = '2200-2100';
+
+                            onSymbolResolvedCallback({
+                                name: symbolName,
+                                ticker: symbolName,
+                                description: symbolName,
+                                type: type,
+                                session: session,
+                                exchange: "FXSSI",
+                                listed_exchange: "",
+                                minmovement: 1,
+                                pricescale: 10000,
+                                pointvalue: 100,
+                                minmovement2: 100,
+                                fractional: false,
+                                has_intraday: true,
+                                has_seconds: false,
+                                seconds_multipliers: [],
+                                has_daily: true,
+                                has_weekly_and_monthly: true,
+                                has_empty_bars: true,
+                                force_session_rebuild: true,
+                                visible_plots_set: "ohlc",
+                                volume_precision: 1,
+                                data_status: "streaming",
+                                expired: false,
+                                sector: "",
+                                industry: ""
+                            });
+                        },
+                        getBars: async function(symbolInfo, resolution, periodParams, onHistoryCallback) {
+                            const symbol = symbolInfo.name;
+                            try {
+                                const historyData = await loadHistoryData(symbol, resolution);
+                                
+                                if (!historyData || !historyData.bars) {
+                                    onHistoryCallback([], { noData: true });
+                                    return;
+                                }
+                                
+                                window.ssiBuffers = window.ssiBuffers || {};
+                                historyData.bars.forEach(bar => {
+                                    for (const [key, value] of Object.entries(bar)) {
+                                        if (!['time', 'open', 'low', 'high', 'close'].includes(key)) {
+                                            window.ssiBuffers[key] = window.ssiBuffers[key] || {};
+                                            window.ssiBuffers[key][bar.time] = value;
+                                        }
+                                    }
+                                });
+                                
+                                onHistoryCallback(historyData.bars, { noData: false });
+                            } catch (error) {
+                                console.error(`Error in getBars: ${error}`);
+                                onHistoryCallback([], { noData: true });
+                            }
+                        },
+                        subscribeBars: () => {},
+                        unsubscribeBars: () => {}
                     },
-                    subscribeBars: () => {}, // Kosongkan karena tidak real-time
-                    unsubscribeBars: () => {} // Kosongkan karena tidak real-time
-                },
-                locale: "en",
-                disabled_features: ["header_compare", "header_screenshot", "header_saveload"],
-                enabled_features: [],
-                custom_indicators_getter: function (_PineJS) {
-                    window.PineJS = _PineJS;
-                    return Promise.resolve([
-                        __prorat_buy_sell__, __prorat_signal__, __prorat_delta__,
-                        __interest_orders__, __interest_orders_delta__, __interest_positions__, __interest_positions_delta__,
-                        __activity_increase__, __activity_increase_delta__, __activity_decrease__, __activity_decrease_delta__,
-                        __ratios__, __derivatives__
-                    ]);
-                }
-            });
-
-            widget.heatmap = {};
-
-            // ===== FUNGSI UNTUK HEATMAP (SLC) =====
-            function initHeatMap() {
-                const chart = widget.chart();
-                let map = null;
-
-                chart.onSymbolChanged().subscribe(null, () => {
-                    if (map) map.remove();
-                    initHeatMapImage();
+                    locale: "en",
+                    disabled_features: ["header_compare", "header_screenshot", "header_saveload"],
+                    custom_indicators_getter: function(PineJS) {
+                        window.PineJS = PineJS;
+                        return Promise.resolve([                            
+                        
+                            ]);
+                    }
                 });
 
-                function adjustHeatmap() {
-                    if (!map) return;
-                    // const xRatio = paneWidth / (timeTo - timeFrom);
-                    const scale = chart.getTimeScale();
-                    map.style.display = 'none';
-                    if (!widget.heatmap[symbol]) return;
-                    map.style.display = 'block';
-                    // mapTimes = widget.heatmap[symbol].times ?? null;
-                    // mapPrices = widget.heatmap[symbol].prices ?? null;
-                    // step = widget.heatmap[symbol].step ?? null;
-                    // if (!mapTimes || !mapPrices.length || !step) return;
-                    // console.log(mapTimes, mapPrices, step);
+                // ======== HEATMAP IMPROVED ========
+                async function initHeatMap() {
+                    const chart = widget.chart();
+                    let map = null;
 
-                    // debugger;
-                    const yRatio = paneHeight / (priceTo - priceFrom);
-                    // console.log(width);
-                    // console.log(scale.rightOffset());
-                    // mapTime
+                    async function setupHeatmap() {
+                        const symbol = chart.symbol();
+                        const heatmapUrl = await loadHeatmapData(symbol);
+                        if (!heatmapUrl) return;
 
+                        const container = document.querySelector(".pane .chart-gui-wrapper");
+                        const oldMap = container.querySelector("#slc");
+                        if (oldMap) oldMap.remove();
 
-                    const mapWidth = widget.heatmap[symbol]['image-resolution'][0] * widget.heatmap[symbol]['resolution']; // in time
-                    const mapHeight = widget.heatmap[symbol]['image-resolution'][1] * widget.heatmap[symbol]['step']; // in price
-
-                    let lastBar = chart?.getSeries()?.data()?.m_bars?._end;
-                    if (lastBar > 0) {
-                        let lastBarTime = chart.getSeries().data().m_bars._items[lastBar - 1].timeMs / 1000;
-                        const timeDiff = (lastBarTime - widget.heatmap[symbol]['times'][1]);
-
-                        // timeDiff
-                        // console.log(());
-
-                        // let top = price2PaneTop(bucket.price);
-                        map.style.width = mapWidth * xRatio + "px";
-                        // console.log((timeTo - timeFrom) / 60 / 24, "hours");
-                        map.style.height = mapHeight * yRatio + "px";
-                        map.style.right = (scale.rightOffset() * scale.barSpacing()) + timeDiff * xRatio + 'px';
-                        // console.log(timeDiff * xRatio);
-
-                        // TODO this step if for pretty look
-                        map.style.top = (priceTo - widget.heatmap[symbol]['prices'][1] - widget.heatmap[symbol]['step']) * yRatio + "px";
-                    }
-                    // book.style.height = (y1 - y2) + "px";
-                    // debugger;
-                }
-
-                /*
-                function tryHeatmap() {
-                    function cycle() {
-                        console.log("trying map");
-                        if (!createHeatMap()) {
-                            setTimeout(cycle, 500);
-                        }
+                        map = document.createElement("img");
+                        map.id = "slc";
+                        map.style.cssText = `
+                            width: 300px;
+                            position: absolute;
+                            top: 0;
+                            right: 0;
+                            cursor: pointer;
+                            pointer-events: none;
+                            mix-blend-mode: darken;
+                            z-index: 100;
+                        `;
+                        map.src = heatmapUrl;
+                        container.appendChild(map);
                     }
 
-                    setTimeout(cycle, 500);
+                    setupHeatmap();
+                    chart.onSymbolChanged().subscribe(null, setupHeatmap);
                 }
-                */
 
-                function initHeatMapImage() {
-                    const symbol = chart.symbol();
-                    const heatmapUrl = `${GITHUB_DATA_BASE_URL}/heatmap/${symbol}.png`;
+                // ======== INITIAL SETUP ========
+                widget.onChartReady(() => {
+                    initHeatMap();
                     
-                    map = document.createElement("img");
-                    map.id = "slc";
-                    map.style.cssText = `
-                        position: absolute;
-                        top: 0;
-                        right: 0;
-                        cursor: pointer;
-                        pointer-events: none;
-                        mix-blend-mode: darken;
-                        max-width: 300px;
-                    `;
-                    map.src = heatmapUrl;
-                    /*
-                    const chartContainer = document.getElementById(widget._id)
-                        .contentWindow.document.querySelector(".pane .chart-gui-wrapper");
-                    chartContainer.appendChild(map);
-                    */
-                   document.getElementById(widget._id).contentWindow.document.querySelector(".pane .chart-gui-wrapper").appendChild(map);
-
-                    adjustHeatmap();
-                    return true;
-                }
-
-                function monitorPriceScale() {
-                    const panes = chart.getPanes();
-                    if (!panes) return;
-
-                    const scale = chart.getTimeScale();
-                    if (!scale) return;
-                    const shift = scale.rightOffset() * chart.resolution() * 60;
-                    const _timeTo = chart.getVisibleRange().to + shift;
-                    const _timeFrom = chart.getVisibleRange().from;
-                    const _xRatio = scale.barSpacing() / (chart.resolution() * 60);
-
-                    let adjust = false;
-                    if (timeFrom !== _timeFrom || timeTo !== _timeTo || xRatio !== _xRatio) {
-                        if (!map) createHeatMap();
-
-                        paneWidth = scale.width();
-                        timeTo = _timeTo;
-                        timeFrom = _timeFrom;
-                        xRatio = _xRatio;
-
-                        adjust = true;
-                    }
-
-
-                    const pane = panes[0];
-                    try {
-                        const scale = pane?.getMainSourcePriceScale();
-                        const range = scale?.getVisiblePriceRange();
-                        if (range) {
-                            if (priceFrom !== range.from || priceTo !== range.to) {
-                                if (!map) createHeatMap();
-
-                                paneHeight = pane.getHeight();
-                                priceTo = range.to;
-                                priceFrom = range.from;
-
-                                adjust = true;
-                            }
-                        }
-                    } catch (e) {
-                        // console.error(e);
-                    }
-
-                    if (adjust) adjustHeatmap();
-                    // setTimeout(monitorPriceScale, interval);
-                }
-
-                widget.headerReady().then(function () {
-                    const slcButton = widget.createButton();
-                    slcButton.classList.add('ssi-toggle', 'active');
-                    slcButton.textContent = 'SLC';
-                    slcButton.addEventListener('click', function() {
-                        slcButton.classList.toggle('active');
-                        map.style.visibility = slcButton.classList.contains('active') 
-                            ? 'visible' : 'hidden';
+                    widget.activeChart().onSymbolChanged().subscribe(null, () => {
+                        const urlParams = new URLSearchParams(window.location.search);
+                        urlParams.set('symbol', widget.activeChart().symbol());
+                        window.history.replaceState({}, '', `?${urlParams}`);
                     });
                 });
-                
-                initHeatMapImage();
-            }            
+            }
 
-            widget.onChartReady(function() {
-                console.log("Chart Ready");
-                initHeatMap();
+            // ======== START APPLICATION ========
+            window.addEventListener('DOMContentLoaded', () => {
+                if (typeof TradingView === 'undefined') {
+                    alert('Error: Charting library not loaded!');
+                    return;
+                }
                 
-                // Tambahkan dropdown untuk indikator
-                widget.createDropdown({
-                    title: 'CUGDEH Indicators',
-                    items: [
-                        {
-                            title: 'ProfitRatio (BUY:SELL)',
-                            onSelect: (e) => {
-                                // profit-ratio-buy-sell@tv-basicstudies-1
-                                widget.activeChart().createStudy('ProfitRatio (BUY:SELL)', false, false, [true], null, {});
-                                // widget.activeChart().getAllStudies().forEach(({name}) => console.log(name));
-                            },
-                        },
-                        {
-                            title: 'ProfitRatio (Signal)',
-                            onSelect: (e) => {
-                                widget.activeChart().createStudy('ProfitRatio (Signal)', false, false, [true], null, {});
-                                // widget.activeChart().getAllStudies().forEach(({name}) => console.log(name));
-                            },
-                        },
-                        {
-                            title: 'ProfitRatio (Delta)',
-                            onSelect: (e) => {
-                                widget.activeChart().createStudy('ProfitRatio (Delta)', false, false, [true], null, {});
-                                // widget.activeChart().getAllStudies().forEach(({name}) => console.log(name));
-                            },
-                        },
-                        {
-                            title: 'Open Interest (Orders)',
-                            onSelect: () => {
-                                widget.activeChart().createStudy('OpenInterest (Orders)', false, false, [true], null, {});
-                                widget.activeChart().createStudy('OpenInterest (Orders,Delta)', false, false, [true], null, {}).then(id => {
-                                    widget.activeChart().getStudyById(id).mergeUp();
-                                });
-                            },
-                        },
-                        // {
-                        //     title: 'Open Interest (Orders, Delta)',
-                        //     onSelect: () => {
-                        //         widget.activeChart().createStudy('OpenInterest (Orders,Delta)', false, false, [true], null, {});
-                        //     },
-                        // },
-                        {
-                            title: 'Open Interest (Positions)',
-                            onSelect: () => {
-                                widget.activeChart().createStudy('OpenInterest (Positions)', false, false, [true], null, {});
-                                widget.activeChart().createStudy('OpenInterest (Positions,Delta)', false, false, [true], null, {}).then(id => {
-                                    widget.activeChart().getStudyById(id).mergeUp();
-                                });
-                            },
-                        },
-                        // {
-                        //     title: 'Open Interest (Positions, Delta)',
-                        //     onSelect: () => {
-                        //         widget.activeChart().createStudy('OpenInterest (Positions,Delta)', false, false, [true], null, {});
-                        //     },
-                        // },
-                        {
-                            title: 'Trading Activity (Increase)',
-                            onSelect: () => {
-                                widget.activeChart().createStudy('TradingActivity (Increase)', false, false, [true], null, {});
-                                widget.activeChart().createStudy('TradingActivity (Increase,Delta)', false, false, [true], null, {}).then(id => {
-                                    widget.activeChart().getStudyById(id).mergeUp();
-                                });
-                            },
-                        },
-                        // {
-                        //     title: 'Trading Activity (Increase,Delta)',
-                        //     onSelect: () => {
-                        //         widget.activeChart().createStudy('TradingActivity (Increase,Delta)', false, false, [true], null, {});
-                        //     },
-                        // },
-                        {
-                            title: 'Trading Activity (Decrease)',
-                            onSelect: () => {
-                                widget.activeChart().createStudy('TradingActivity (Decrease)', false, false, [true], null, {});
-                                widget.activeChart().createStudy('TradingActivity (Decrease,Delta)', false, false, [true], null, {}).then(id => {
-                                    widget.activeChart().getStudyById(id).mergeUp();
-                                });
-                            },
-                        },
-                        // {
-                        //     title: 'Trading Activity (Decrease,Delta)',
-                        //     onSelect: () => {
-                        //         widget.activeChart().createStudy('TradingActivity (Decrease,Delta)', false, false, [true], null, {});
-                        //     },
-                        // },
-                        {
-                            title: 'Ratios',
-                            onSelect: () => {
-                                widget.activeChart().createStudy('Ratios', false, false, [true], null, {});
-                            },
-                        },
-                        {
-                            title: 'Derivatives',
-                            onSelect: () => {
-                                widget.activeChart().createStudy('Derivatives', false, false, [true], null, {});
-                            },
-                        }
-                    ]
-                });
+                try {
+                    initOnReady();
+                } catch (error) {
+                    console.error('Application init error:', error);
+                    showLoading(false);
+                    alert('Terjadi kesalahan saat memulai aplikasi. Silakan coba lagi.');
+                }
             });
-            // setTimeout(monitorPriceScale, interval);
-        }
-
-        window.addEventListener('DOMContentLoaded', initOnReady, false);
-    })();
-</script>
+        })();
+    </script>
+</body>
 </html>
