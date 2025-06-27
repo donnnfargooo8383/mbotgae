@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-    <title>cugdeh</title>
+    <title>CCCC Ngancugdeh</title>
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
     <script type="text/javascript" src="./charting_library.standalone.js"></script>
     <script type="text/javascript" src="./bundle.js"></script>
@@ -18,16 +18,18 @@
         const GITHUB_BRANCH = "main";
         const BASE_URL = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}`;
 
+        // ... [Kode indikator custom tetap sama] ...
+
         function initOnReady() {
             const widget = new TradingView.widget({
                 fullscreen: true,
-                symbol: getURLParameter('symbol') || 'XAUUSD',
+                symbol: getURLParameter('symbol') ?? 'XAUUSD',
                 interval: '20',
+                custom_css_url: "/mbotgae/tv.css?v=2",
                 container: "tv_chart_container",
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 datafeed: {
                     onReady: (callback) => {
-                        console.log('Datafeed ready');
                         callback({
                             supported_resolutions: ["15", "20", "30", "60", "240"],
                             supports_marks: true,
@@ -42,140 +44,186 @@
                         });
                     },                    
                     searchSymbols: (userInput, exchange, symbolType, onResultReadyCallback) => {
-                        console.log('Searching symbols:', userInput);
-                        const symbols = ["XAUUSD", "BTCUSD"];
-                        const ret = symbols
-                            .filter(symbol => symbol.toLowerCase().includes(userInput.toLowerCase()))
-                            .map(symbol => ({
-                                symbol,
-                                ticker: symbol,
-                                description: symbol,
-                                exchange: "SAWO",
-                                type: symbol === "BTCUSD" ? 'crypto' : 'forex'
-                            }));
+                        let symbols;
+                        const crypto = [
+                            "BTCUSD"
+                        ];
+                        const forex = [
+                            "XAUUSD"
+                        ];
+                        const indexes = [
+
+                        ];
+                        if (symbolType === 'crypto')
+                            symbols = crypto;
+                        else if (symbolType === 'forex')
+                            symbols = forex;
+                        else if (symbolType === 'index')
+                            symbols = indexes;
+                        else
+                            symbols = crypto.concat(forex);
+
+                        let ret = [];
+                        let found_symbols = [];
+                        for (let symbol of symbols) {
+                            if (['ETHUSD', 'BTCUSD'].indexOf(symbol) > -1) symbolType = 'crypto';
+                            if (['US30', 'NAS100'].indexOf(symbol) > -1) symbolType = 'index';
+                            if (symbol.toLowerCase().indexOf(userInput.toLowerCase()) < 0) continue;
+                            found_symbols.push(symbol);
+                        }
+                        symbols = found_symbols.concat(symbols);
+                        symbols = symbols.filter((value, index, array) => array.indexOf(value) === index);
+
+                        for (let symbol of symbols) {
+                            // type = "forex";
+                            ret.push({
+                                "symbol": symbol,
+                                "ticker": symbol,
+                                // "full_name": symbol,
+                                "description": symbol,
+                                "exchange": "SAWO",
+                                "type": symbolType
+                            });
+                        }
+
                         onResultReadyCallback(ret);
                     },
                     
                     resolveSymbol: (symbolName, onSymbolResolvedCallback, onResolveErrorCallback, extension) => {
-                        console.log('Resolving symbol:', symbolName);
+                        // console.log('[resolveSymbol]: Method call', symbolName);
+                        let type = "forex";
+                        if (['ETHUSD', 'BTCUSD'].indexOf(symbolName) > -1) type = 'crypto';
+                        if (['US30', 'NAS100'].indexOf(symbolName) > -1) type = 'index';
+                        let session = "2200-2200";
+                        if (type === 'crypto') session = '24x7';
+                        if (symbolName === "XTIUSD") session = '2200-2100';
+
                         const config = {
-                            name: symbolName,
-                            ticker: symbolName,
-                            description: symbolName,
-                            type: symbolName === "BTCUSD" ? 'crypto' : 'forex',
-                            session: "2200-2200",
-                            exchange: "SAWO",
-                            listed_exchange: "",
-                            minmovement: 1,
-                            pricescale: 10000,
-                            pointvalue: 100,
-                            minmovement2: 100,
-                            fractional: false,
-                            has_intraday: true,
-                            has_seconds: false,
-                            seconds_multipliers: [],
-                            has_daily: true,
-                            has_weekly_and_monthly: true,
-                            has_empty_bars: true,
-                            force_session_rebuild: true,
-                            visible_plots_set: "ohlc",
-                            volume_precision: 1,
-                            data_status: "streaming",
-                            expired: false,
-                            sector: "",
-                            industry: ""
-                        };
+                            "name": symbolName,
+                            "ticker": symbolName,
+                            "description": symbolName,
+                            "type": type,
+                            "session": session,
+                            "exchange": "SAWO",
+                            "listed_exchange": "",
+                            "minmovement": 1,
+                            "pricescale": 10000,
+                            "pointvalue": 100,
+                            "minmovement2": 100,
+                            "fractional": false,
+                            // "suported_resolutions": [
+                            //     "5",
+                            //     "15",
+                            //     "30",
+                            //     "60",
+                            //     "240",
+                            // ],
+                            "has_intraday": true,
+                            // "intraday_multipliers": [
+                            //     "5",
+                            //     "15",
+                            //     "30",
+                            //     "60",
+                            //     "240",
+                            // ],
+                            "has_seconds": false,
+                            "seconds_multipliers": [],
+                            "has_daily": true,
+                            "has_weekly_and_monthly": true,
+                            "has_empty_bars": true,
+                            "force_session_rebuild": true,
+                            "visible_plots_set": "ohlc",
+                            "volume_precision": 1,
+                            "data_status": "streaming",
+                            "expired": false,
+                            "sector": "",
+                            "industry": ""
+                            // "currency_code": "EURUSD"
+                        }
+
+                        // console.log(config);
                         onSymbolResolvedCallback(config);
                     },
                                                                  
                     getBars: async function (symbolInfo, resolution, periodParams, onHistoryCallback, onErrorCallback) {
                         const symbol = symbolInfo.name;
-                        console.log(`Loading bars for ${symbol} (${resolution})`);
+                        const cacheKey = `${symbol}_${resolution}`;
+                        
+                        // Inisialisasi cache
+                        if (!window.chartDataCache) window.chartDataCache = {};
+                        if (!window.ssiBuffers) window.ssiBuffers = {};
+                        
+                        // Reset buffer jika resolusi berubah
+                        if (window.currentResolution !== resolution) {
+                            window.ssiBuffers = {};
+                            window.chartDataCache = {};
+                            window.currentResolution = resolution;
+                        }
+                        
+                        // Gunakan data cache jika tersedia
+                        if (window.chartDataCache[cacheKey]) {
+                            onHistoryCallback(window.chartDataCache[cacheKey].bars, 
+                                {noData: window.chartDataCache[cacheKey].bars.length === 0});
+                            return;
+                        }
                         
                         const url = `${BASE_URL}/data/history/${symbol}_${resolution}.json`;
-                        console.log('Fetching data from:', url);
                         
                         try {
                             const response = await fetch(url);
-                            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                            if (!response.ok) throw new Error('Data tidak ditemukan');
                             
                             const json = await response.json();
-                            console.log(`Loaded ${json.bars.length} bars for ${symbol}`);
+                            window.chartDataCache[cacheKey] = json; // Simpan ke cache
                             
-                            // Simpan data ke cache sederhana
-                            if (!window.chartDataCache) window.chartDataCache = {};
-                            window.chartDataCache[`${symbol}_${resolution}`] = json;
-                            
-                            // Simpan buffer untuk indikator
-                            if (!window.ssiBuffers) window.ssiBuffers = {};
-                            json.bars.forEach(bar => {
-                                for (const key in bar) {
+                            for (let bar of json.bars) {
+                                for (let key in bar) {
                                     if (!['time', 'open', 'low', 'high', 'close'].includes(key)) {
                                         if (!window.ssiBuffers[key]) window.ssiBuffers[key] = {};
-                                        window.ssiBuffers[key][bar.time] = bar[key];
+                                        window.ssiBuffers[key][bar['time']] = bar[key];
                                     }
                                 }
-                            });
+                            }
                             
                             onHistoryCallback(json.bars, {noData: json.bars.length === 0});
                         } catch (error) {
-                            console.error('Failed to load bars:', error);
+                            console.error(`Gagal memuat data: ${symbol}_${resolution}`, error);
                             onHistoryCallback([], {noData: true});
                         }
                     },
-                    
-                    subscribeBars: () => {
-                        console.log('Subscribing to bars');
-                    },
-                    
-                    unsubscribeBars: () => {
-                        console.log('Unsubscribing from bars');
-                    }
+                    subscribeBars: () => {},
+                    unsubscribeBars: () => {}
                 },
                 locale: "en",
                 disabled_features: ["header_compare", "header_screenshot", "header_saveload"],
-                enabled_features: ["dont_show_boolean_study_arguments", "hide_last_na_study_output"],
                 custom_indicators_getter: function (_PineJS) {
                     window.PineJS = _PineJS;
-                    return Promise.resolve([]);
-                },
-                charts_storage_url: 'https://saveload.tradingview.com',
-                charts_storage_api_version: "1.1",
-                client_id: 'tradingview.com',
-                user_id: 'public_user_id',
-                load_last_chart: true
+                    return Promise.resolve([
+                        // ... [Daftar indikator custom] ...
+                    ]);
+                }
             });
 
+            widget.heatmap = {};
+
             widget.headerReady().then(function () {
-                console.log('Header ready');
                 const resetButton = widget.createButton();
                 resetButton.innerHTML = "R";
                 resetButton.classList.add('ssi-toggle');
                 resetButton.addEventListener('click', function () {
-                    console.log('Reset button clicked');
-                    if (window.chartDataCache) window.chartDataCache = {};
-                    if (window.ssiBuffers) window.ssiBuffers = {};
+                    window.ssiBuffers = {};
+                    window.chartDataCache = {};
                     widget.chart().resetData();
-                });
-                
-                // Tambahkan tombol SLC
-                const slcButton = widget.createButton();
-                slcButton.innerHTML = "SLC";
-                slcButton.classList.add('ssi-toggle');
-                slcButton.addEventListener('click', function () {
-                    console.log('SLC button clicked');
-                    initHeatMap();
                 });
             });
 
             widget.onChartReady(function () {
-                console.log('Chart ready');
                 initHeatMap();
-                
                 widget.activeChart().onSymbolChanged().subscribe(null, () => {
-                    const symbol = widget.activeChart().symbol();
-                    console.log('Symbol changed to:', symbol);
-                    initHeatMap();
+                    setURLParameter('symbol', widget.activeChart().symbol());
+                    window.ssiBuffers = {};
+                    window.chartDataCache = {};
+                    initHeatMap(); // Reload heatmap untuk simbol baru
                 });
             });
 
@@ -190,86 +238,169 @@
                 return new URLSearchParams(window.location.search).get(name);
             }
 
-            // ========= HEATMAP =========
+            // ========= HEATMAP (PERBAIKAN UTAMA) =========
             function initHeatMap() {
-                if (!widget || !widget.chart()) {
-                    console.log('Widget not ready, retrying in 500ms');
-                    setTimeout(initHeatMap, 500);
-                    return;
-                }
-                
                 const chart = widget.chart();
-                const symbol = chart.symbol();
-                console.log('Initializing heatmap for:', symbol);
-                
-                // Hapus heatmap lama jika ada
-                const iframeDoc = document.getElementById(widget._id).contentWindow.document;
-                const oldMap = iframeDoc.getElementById('slc');
-                if (oldMap) oldMap.remove();
-                
-                // Buat elemen heatmap baru
-                const map = document.createElement("img");
-                map.id = "slc";
-                map.style.position = "absolute";
-                map.style.top = "0";
-                map.style.right = "0";
-                map.style.zIndex = "100";
-                map.style.pointerEvents = "none";
-                map.style.opacity = "0.7";
-                map.style.display = "block";
-                
-                // Coba muat heatmap
-                const heatmapUrl = `${BASE_URL}/data/heatmap/${symbol}.png`;
-                console.log('Loading heatmap from:', heatmapUrl);
-                map.src = heatmapUrl;
-                
-                // Tambahkan ke chart
-                const chartContainer = iframeDoc.querySelector('.chart-gui-wrapper');
-                if (chartContainer) {
-                    chartContainer.appendChild(map);
-                    console.log('Heatmap added to chart');
-                    adjustHeatmapPosition(map);
-                } else {
-                    console.log('Chart container not found, retrying in 300ms');
-                    setTimeout(() => initHeatMap(), 300);
-                }
-                
-                // Fungsi untuk menyesuaikan posisi heatmap
-                function adjustHeatmapPosition(mapElement) {
-                    if (!widget || !widget.chart()) return;
+                let map = null;
+                let paneHeight, priceFrom, priceTo, paneWidth, timeFrom, timeTo, xRatio;
+                let symbol = chart.symbol();
+                let enabled = true;
+
+                chart.onSymbolChanged().subscribe(
+                    null,
+                    () => {
+                        symbol = chart.symbol();
+                        if (map) map.remove();
+                        createHeatMap();
+                    }
+                );
+
+                function createHeatMap() {
+                    const series = chart.getSeries();
+                    if (!series) return false;
                     
-                    const chart = widget.chart();
+                    // Hapus heatmap lama jika ada
+                    const existingMap = document.getElementById(widget._id)?.contentWindow?.document?.getElementById('slc');
+                    if (existingMap) existingMap.remove();
+                    
+                    map = document.createElement("img");
+                    map.id = "slc";
+                    map.style.position = "absolute";
+                    map.style.top = "0";
+                    map.style.right = "0";
+                    map.style.cursor = "pointer";
+                    map.style.pointerEvents = "none";
+                    map.style.mixBlendMode = "darken";
+                    map.src = `${BASE_URL}/data/heatmap/${symbol}.png?t=${Date.now()}`;
+                    
+                    document.getElementById(widget._id).contentWindow.document.querySelector(".pane .chart-gui-wrapper").appendChild(map);
+                    adjustHeatmap();
+                    return true;
+                }
+
+                function adjustHeatmap() {
+                    if (!map) return;
+                    
+                    const series = chart.getSeries();
+                    if (!series) return;
+                    
                     const panes = chart.getPanes();
                     if (!panes || !panes[0]) return;
                     
+                    const priceScale = panes[0].getMainSourcePriceScale();
+                    if (!priceScale) return;
+                    
+                    const priceRange = priceScale.getVisiblePriceRange();
+                    if (!priceRange) return;
+                    
+                    priceFrom = priceRange.from;
+                    priceTo = priceRange.to;
+                    paneHeight = panes[0].getHeight();
+                    
+                    const timeScale = chart.getTimeScale();
+                    if (!timeScale) return;
+                    
+                    paneWidth = timeScale.width();
+                    const visibleRange = chart.getVisibleRange();
+                    timeFrom = visibleRange.from;
+                    timeTo = visibleRange.to;
+                    xRatio = paneWidth / (timeTo - timeFrom);
+                    
+                    if (!widget.heatmap[symbol]) {
+                        fetch(`${BASE_URL}/data/heatmap/${symbol}.json`)
+                            .then(response => response.json())
+                            .then(data => {
+                                widget.heatmap[symbol] = data;
+                                adjustHeatmap();
+                            })
+                            .catch(error => {
+                                console.error('Gagal memuat data heatmap:', error);
+                            });
+                        return;
+                    }
+                    
+                    const heatmapData = widget.heatmap[symbol];
+                    
+                    // Perhitungan posisi vertikal yang lebih akurat
+                    const priceDiff = heatmapData.price - priceFrom;
+                    const topPosition = paneHeight - (priceDiff / (priceTo - priceFrom)) * paneHeight;
+                    
+                    // Perhitungan posisi horizontal dengan offset
+                    const timeDiff = timeTo - heatmapData.time;
+                    const rightPosition = timeDiff * xRatio - (heatmapData.width * 0.5);
+                    
+                    map.style.top = `${topPosition}px`;
+                    map.style.right = `${rightPosition}px`;
+                    map.style.width = `${heatmapData.width}px`;
+                    map.style.height = `${heatmapData.height}px`;
+                }
+
+                function monitorPriceScale() {
+                    if (!widget || !widget.chart()) return;
+                    
+                    const panes = widget.chart().getPanes();
+                    if (!panes || !panes[0]) {
+                        setTimeout(monitorPriceScale, 100);
+                        return;
+                    }
+                    
                     try {
                         const priceScale = panes[0].getMainSourcePriceScale();
+                        if (!priceScale) {
+                            setTimeout(monitorPriceScale, 100);
+                            return;
+                        }
+                        
                         const priceRange = priceScale.getVisiblePriceRange();
-                        const paneHeight = panes[0].getHeight();
+                        if (!priceRange) {
+                            setTimeout(monitorPriceScale, 100);
+                            return;
+                        }
                         
-                        // Ambil data bar terakhir
-                        const series = chart.getSeries();
-                        const bars = series.data().bars;
-                        const lastBar = bars[bars.length - 1];
-                        
-                        if (lastBar) {
-                            // Posisi vertikal berdasarkan harga terakhir
-                            const priceDiff = lastBar.close - priceRange.from;
-                            const topPosition = paneHeight - (priceDiff / (priceRange.to - priceRange.from)) * paneHeight;
+                        // Update hanya jika ada perubahan signifikan
+                        if (Math.abs(priceRange.to - priceTo) > 0.0001 || 
+                            Math.abs(priceRange.from - priceFrom) > 0.0001) {
                             
-                            // Posisi horizontal di ujung kanan
-                            mapElement.style.top = `${topPosition - 50}px`; // Adjust 50px untuk tinggi gambar
-                            mapElement.style.right = '0px';
-                            mapElement.style.width = '150px';
-                            mapElement.style.height = '100px';
+                            priceFrom = priceRange.from;
+                            priceTo = priceRange.to;
+                            paneHeight = panes[0].getHeight();
+                            
+                            const timeScale = widget.chart().getTimeScale();
+                            if (timeScale) {
+                                paneWidth = timeScale.width();
+                                const visibleRange = widget.chart().getVisibleRange();
+                                timeFrom = visibleRange.from;
+                                timeTo = visibleRange.to;
+                                xRatio = paneWidth / (timeTo - timeFrom);
+                            }
+                            
+                            adjustHeatmap();
                         }
                     } catch (e) {
-                        console.error('Error adjusting heatmap position:', e);
+                        console.error('Error in monitorPriceScale:', e);
                     }
+                    
+                    setTimeout(monitorPriceScale, 100);
                 }
                 
-                // Sesuaikan posisi secara periodik
-                setInterval(() => adjustHeatmapPosition(map), 1000);
+                widget.headerReady().then(function () {
+                    if (!window.__slc_button) {
+                        window.__slc_button = widget.createButton();
+                        __slc_button.classList.add('ssi-toggle', 'active');
+                        __slc_button.textContent = 'SLC';
+                        __slc_button.addEventListener('click', function () {
+                            __slc_button.classList.toggle('active');
+                            if (map) {
+                                map.style.visibility = __slc_button.classList.contains('active') 
+                                    ? 'visible' 
+                                    : 'hidden';
+                            }
+                        });
+                    }
+                });
+
+                createHeatMap();
+                setTimeout(monitorPriceScale, 100);
             }
         }
 
