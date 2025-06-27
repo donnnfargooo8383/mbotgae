@@ -1,0 +1,9 @@
+array(3) {
+  ["path"]=>
+  string(10) "tv/heatmap"
+  ["symbol"]=>
+  string(9) "undefined"
+  ["t"]=>
+  string(13) "1750992153332"
+}
+string(44) "/tv/heatmap?symbol=undefined&t=1750992153332"
