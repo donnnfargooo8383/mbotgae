@@ -1,2 +1,1 @@
-# tradingview-tools
-Besok Lagi
+# Besok Lagi
